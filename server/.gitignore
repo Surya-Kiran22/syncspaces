@@ -3,3 +3,5 @@ node_modules/
 .DS_Store
 *.log
 Documents/
+Client/node_modules/
+server/node_modules/

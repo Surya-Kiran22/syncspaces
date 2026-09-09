@@ -1,14 +1,17 @@
 # Render Blueprint Configuration for SyncSpace MERN Stack Deployment
 # Official documentation: https://render.com/docs/blueprint-spec
 
+version: "1"
+
 services:
   - type: web
     name: syncspace
-    env: node
+    runtime: node
     plan: free
     region: singapore
-    buildCommand: npm run build:all
+    buildCommand: npm install && npm run build:all
     startCommand: npm start
+    healthCheckPath: /api/health
     autoDeploy: true
     envVars:
       - key: NODE_ENV
