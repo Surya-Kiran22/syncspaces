@@ -3,7 +3,18 @@ import { io } from 'socket.io-client';
 
 const SocketContext = createContext(null);
 
-const SOCKET_SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:5000';
+const getSocketServerUrl = () => {
+  if (import.meta.env.VITE_SERVER_URL) return import.meta.env.VITE_SERVER_URL;
+  if (typeof window !== 'undefined') {
+    const { hostname, origin } = window.location;
+    if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
+      return origin;
+    }
+  }
+  return 'http://localhost:5000';
+};
+
+const SOCKET_SERVER_URL = getSocketServerUrl();
 
 export const SocketProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
