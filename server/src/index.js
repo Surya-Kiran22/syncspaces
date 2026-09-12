@@ -10,6 +10,7 @@ import { connectDB } from './config/db.js';
 import healthRoutes from './routes/healthRoutes.js';
 import roomRoutes from './routes/roomRoutes.js';
 import authRoutes from './routes/authRoutes.js';
+import executeRoutes from './routes/executeRoutes.js';
 import { registerRoomHandlers } from './socket/roomHandler.js';
 import { socketAuthMiddleware } from './middleware/auth.js';
 
@@ -38,6 +39,7 @@ app.use(express.json());
 app.use('/api/health', healthRoutes);
 app.use('/api/rooms', roomRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/execute', executeRoutes);
 
 // Socket.io Setup
 const io = new Server(httpServer, {
