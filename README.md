@@ -1,91 +1,71 @@
-# SyncSpace
+# 🚀 SyncSpace — Real-Time Collaborative Workspace
 
-## Real-Time Collaborative Whiteboard & Code Editor
+SyncSpace is an advanced real-time collaborative workspace platform combining a multi-user interactive whiteboard (**Astra Galaxy Canvas**), collaborative code editor powered by **Monaco Editor** and **Yjs CRDTs**, multi-language code execution engine, session replay, and room access control.
 
-SyncSpace is a real-time collaborative developer tool that allows multiple users to work together in the same session. Users can simultaneously draw on a shared whiteboard and write code in a shared code editor.
+---
 
-The system uses WebSockets for real-time communication and CRDT-based synchronization to handle concurrent changes without data conflicts or overwriting.
+## 🛠️ Tech Stack
 
-## Project Domain
+- **Frontend:** React 18, Vite, Tailwind CSS, Lucide React, Monaco Editor
+- **Backend:** Node.js, Express.js, Socket.io, Yjs CRDT Engine
+- **Database:** MongoDB Atlas, Mongoose ODM
+- **Deployment:** Render Blueprint (`render.yaml`)
 
-Developer Tools & Real-Time Collaboration
+---
 
-## Key Features
+## 📅 20-Day Progressive Development Roadmap
 
-- Real-time collaborative whiteboard
-- Real-time collaborative code editor
-- Multiple users can collaborate simultaneously
-- Real-time communication using WebSockets
-- Conflict-free concurrent editing using CRDTs
-- Isolated collaborative rooms
-- User cursor and awareness synchronization
-- Persistent collaborative session state
-- JWT-based authentication and access control
-- Session history replay
+| Day | Module / Focus Area | Core Deliverables |
+| :--- | :--- | :--- |
+| **Day 1** | **Project Setup & Base Scaffolding** | Repository initialization, root build scripts, package structure, and foundational setup. |
+| **Day 2** | **Express Backend Infrastructure** | HTTP Express server initialization, environment configuration, CORS, and health API routes. |
+| **Day 3** | **Frontend Vite React Foundation** | Vite React app setup, CSS styling, layout containers, and main Header component. |
+| **Day 4** | **Database Configuration & Models** | MongoDB Atlas connection logic (`db.js`) and Mongoose User model schema. |
+| **Day 5** | **Socket.io Core Server & Client** | Socket.io server engine and frontend `SocketContext` provider integration. |
+| **Day 6** | **Room Management API** | Mongoose Room Model, room creation/joining controllers, and REST routes (`/api/rooms`). |
+| **Day 7** | **Socket Room Join & Routing** | WebSocket `roomHandler.js`, real-time join/leave notifications, and room occupancy lists. |
+| **Day 8** | **User Presence & Cursor Sync** | Active user list tracking, avatar presence indicators, and live cursor position broadcasting. |
+| **Day 9** | **Canvas & Editor Split View** | Workspace split-pane component (`SplitLayout.jsx`) enabling side-by-side canvas and code editor. |
+| **Day 10** | **Astra Galaxy Canvas Engine** | Custom HTML5 Canvas engine supporting pencil drawing, shapes (rectangle, circle, line), and text nodes. |
+| **Day 11** | **Yjs Whiteboard CRDT Integration** | Multi-client canvas shape sync via Yjs CRDT (`useYjsCanvas.js`) with conflict resolution. |
+| **Day 12** | **Monaco Code Editor UI** | Monaco Editor integration with language selection (JavaScript, Python, C++, Java) and theme configuration. |
+| **Day 13** | **Yjs CRDT Collaborative Code Sync** | Real-time concurrent code editing via Yjs `Y.Text` CRDT bindings (`useYjsCode.js`). |
+| **Day 14** | **Server-side Yjs MongoDB Persistence** | Yjs binary document persistence service (`yjsPersistence.js`) and auto-snapshot save handler. |
+| **Day 15** | **Multi-Language Execution Engine** | Code execution backend route (`/api/execute`) and client console execution output pane. |
+| **Day 16** | **User Authentication & Authorization** | User signup and login authentication endpoints with Bcrypt password hashing and JWT token issuance. |
+| **Day 17** | **Socket.io JWT Authentication** | Socket connection security middleware (`auth.js`) and room-level authorization enforcement. |
+| **Day 18** | **Session Replay Backend Storage** | Snapshot timeline schema (`Snapshot.js`) and interval snapshot storage controller (`replayController.js`). |
+| **Day 19** | **Session Replay UI & Controls** | Timeline scrub control bar (`ReplayBar.jsx`) with playback controls (play, pause, step). |
+| **Day 20** | **QA Test Suite & Deployment** | End-to-end automated testing suite (`tests/`), light theme UI polish, and Render deployment setup. |
 
-## Technology Stack
+---
 
-### Frontend
-- React.js
-- Yjs
-- Konva.js / Fabric.js
-- Monaco Editor
+## ⚡ Day 1 Deliverable Summary
 
-### Backend
-- Node.js
-- Express.js
-- Socket.io
+- Initialized repository architecture with root `package.json`, `.gitignore`, and `render.yaml`.
+- Configured Express server entry points and Vite React client scaffolding.
+- Defined 20-Day Progressive Development Breakdown roadmap.
 
-### Database
-- MongoDB
+---
 
-### Synchronization
-- WebSockets
-- Socket.io
-- Yjs
-- CRDT (Conflict-free Replicated Data Types)
+## 🚀 Getting Started
 
-### Authentication
-- JWT (JSON Web Token)
+### Prerequisites
+- Node.js (v18+)
+- npm or yarn
+- MongoDB Instance / URI
 
-## Main Modules
+### Quick Start
 
-### 1. Real-Time Sync Engine
-Uses WebSockets and Socket.io for low-latency, bi-directional communication between connected users.
+```bash
+# 1. Install root & child dependencies
+npm run build:all
 
-### 2. CRDT Implementation
-Yjs is used to handle concurrent document editing and conflict resolution.
+# 2. Start Backend Server
+cd server
+npm run dev
 
-### 3. Interactive Canvas
-React with Konva.js / Fabric.js is used to provide a 2D collaborative whiteboard for drawing shapes, lines, and text.
-
-### 4. Code Editor
-Monaco Editor is integrated into the React frontend for collaborative code editing.
-
-## Development Plan
-
-### Week 1
-- Set up Express and Socket.io
-- Create isolated collaborative rooms
-- Build React split-screen layout
-- Whiteboard on the left
-- Code Editor on the right
-
-### Week 2
-- Integrate Yjs and awareness
-- Implement collaborative canvas functionality
-- Synchronize drawing and user cursors
-
-### Week 3
-- Connect Yjs with MongoDB for persistence
-- Integrate Monaco Editor
-- Enable simultaneous code editing
-
-### Week 4
-- Implement JWT authentication
-- Add room access control
-- Add session replay functionality
-
-## Project Goal
-
-The goal of SyncSpace is to demonstrate advanced MERN stack engineering with real-time collaboration, CRDT-based synchronization, interactive canvas functionality, and collaborative code editing.
+# 3. Start Frontend Client (in a separate terminal)
+cd client
+npm run dev
+```
