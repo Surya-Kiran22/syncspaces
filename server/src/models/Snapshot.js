@@ -14,7 +14,7 @@ const snapshotSchema = new mongoose.Schema({
   },
   actionType: {
     type: String,
-    enum: ['canvas_draw', 'canvas_clear', 'code_edit', 'initial_session'],
+    enum: ['canvas_draw', 'canvas_clear', 'code_edit', 'initial_session', 'room_init'],
     default: 'canvas_draw',
   },
   shapes: {
