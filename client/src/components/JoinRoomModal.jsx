@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useSocket } from '../context/SocketContext';
 import { Sparkles, ArrowRight, User, Hash } from 'lucide-react';
-import { AstraGalaxyCanvas } from './AstraGalaxyCanvas';
 
 export const JoinRoomModal = () => {
   const { joinRoom } = useSocket();
@@ -34,136 +33,146 @@ export const JoinRoomModal = () => {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: '#05070e',
+      backgroundColor: '#f8fafc',
       position: 'relative',
-      padding: '20px',
-      overflow: 'hidden'
+      padding: '24px',
+      overflow: 'auto'
     }}>
-      <AstraGalaxyCanvas />
-
       <div style={{
         position: 'relative',
         zIndex: 10,
         width: '100%',
-        maxWidth: '420px',
-        backgroundColor: 'rgba(15, 23, 42, 0.75)',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
-        border: '1px solid rgba(56, 189, 248, 0.25)',
-        borderRadius: '12px',
+        maxWidth: '460px',
+        backgroundColor: '#ffffff',
+        border: '1px solid #cbd5e1',
+        borderRadius: '6px',
         padding: '32px',
-        boxShadow: '0 20px 40px rgba(0, 0, 0, 0.6)'
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
       }}>
-        {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-          <h1 style={{ fontSize: '26px', fontWeight: 'bold', color: '#ffffff', marginBottom: '6px' }}>
-            SyncSpace
-          </h1>
-          <p style={{ color: '#94a3b8', fontSize: '13px', lineHeight: '1.4' }}>
-            Real-Time Collaborative Whiteboard & Code Editor
+        {/* Card Header */}
+        <div style={{ marginBottom: '24px', borderBottom: '1px solid #e2e8f0', paddingBottom: '16px' }}>
+          <h2 style={{ fontSize: '22px', fontWeight: '800', color: '#0f172a', marginBottom: '6px' }}>
+            SyncSpace Workspace Join
+          </h2>
+          <p style={{ color: '#64748b', fontSize: '13px', lineHeight: '1.4', fontWeight: '500' }}>
+            Enter your name and room identifier to join real-time collaboration.
           </p>
         </div>
 
         {error && (
           <div style={{
-            backgroundColor: '#3a1d1d',
-            border: '1px solid #d9534f',
-            color: '#ff6b6b',
-            padding: '10px 12px',
+            backgroundColor: '#fef2f2',
+            border: '1px solid #fecaca',
+            color: '#dc2626',
+            padding: '10px 14px',
             borderRadius: '4px',
             fontSize: '13px',
+            fontWeight: '600',
             marginBottom: '16px'
           }}>
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {/* Username */}
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+          {/* Username Input Box */}
           <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#cccccc', marginBottom: '6px' }}>
-              Your Name
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#0f172a', marginBottom: '6px' }}>
+              Your Name / Username
             </label>
             <div style={{ position: 'relative' }}>
-              <User size={16} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#888888' }} />
+              <User size={16} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
               <input
                 type="text"
-                placeholder="Enter your name"
+                placeholder="e.g. Alex Rockwell"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 style={{
                   width: '100%',
-                  backgroundColor: '#1e1e1e',
-                  border: '1px solid #3e3e42',
+                  backgroundColor: '#ffffff',
+                  border: '1px solid #cbd5e1',
                   borderRadius: '4px',
                   padding: '10px 10px 10px 34px',
-                  color: '#ffffff',
+                  color: '#0f172a',
                   fontSize: '14px',
+                  fontWeight: '500',
                   outline: 'none'
                 }}
               />
             </div>
           </div>
 
-          {/* Room ID */}
+          {/* Room ID Input Box */}
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-              <label style={{ fontSize: '13px', fontWeight: '600', color: '#cccccc' }}>
-                Room ID
+              <label style={{ fontSize: '13px', fontWeight: '700', color: '#0f172a' }}>
+                Room Identifier Code
               </label>
               <button
                 type="button"
                 onClick={generateRandomRoomId}
                 style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#007acc',
+                  backgroundColor: '#f1f5f9',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '3px',
+                  color: '#166534',
                   fontSize: '12px',
-                  fontWeight: '600',
+                  fontWeight: '700',
                   cursor: 'pointer',
+                  padding: '3px 8px',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '4px'
                 }}
               >
-                <Sparkles size={12} />
-                Generate Code
+                <Sparkles size={13} />
+                Generate ID
               </button>
             </div>
             <div style={{ position: 'relative' }}>
-              <Hash size={16} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#888888' }} />
+              <Hash size={16} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
               <input
                 type="text"
-                placeholder="Enter Room Code (e.g. ROOM12)"
+                placeholder="e.g. ROOM-1001"
                 value={roomId}
                 onChange={(e) => setRoomId(e.target.value.toUpperCase())}
                 style={{
                   width: '100%',
-                  backgroundColor: '#1e1e1e',
-                  border: '1px solid #3e3e42',
+                  backgroundColor: '#ffffff',
+                  border: '1px solid #cbd5e1',
                   borderRadius: '4px',
                   padding: '10px 10px 10px 34px',
-                  color: '#ffffff',
+                  color: '#0f172a',
                   fontSize: '14px',
                   fontFamily: 'monospace',
+                  fontWeight: '700',
                   outline: 'none'
                 }}
               />
             </div>
           </div>
 
-          {/* Join Button */}
+          {/* Submit Action Button */}
           <button
             type="submit"
-            className="btn-primary"
             style={{
-              width: '100%',
+              backgroundColor: '#166534',
+              color: '#ffffff',
+              border: '1px solid #14532d',
+              borderRadius: '4px',
+              padding: '11px',
+              fontSize: '14px',
+              fontWeight: '700',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
               justifyContent: 'center',
-              padding: '10px',
-              marginTop: '8px'
+              gap: '6px',
+              marginTop: '6px',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
             }}
           >
-            <span>Join Room</span>
+            <span>Enter Workspace Room</span>
             <ArrowRight size={16} />
           </button>
         </form>

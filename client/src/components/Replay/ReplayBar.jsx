@@ -61,28 +61,33 @@ export const ReplayBar = ({ isOpen, onClose }) => {
 
   if (!isOpen) return null;
 
+  const currentSnap = snapshots[currentIndex];
+  const firstSnap = snapshots[0];
+  const lastSnap = snapshots[snapshots.length - 1];
+
   return (
     <div style={{
       position: 'fixed',
-      bottom: '16px',
+      bottom: '24px',
       left: '50%',
       transform: 'translateX(-50%)',
-      width: '90%',
-      maxWidth: '600px',
-      backgroundColor: '#252526',
-      border: '1px solid #3e3e42',
+      width: '92%',
+      maxWidth: '750px',
+      backgroundColor: '#eff6ff',
+      border: '1px solid #bfdbfe',
       borderRadius: '6px',
-      padding: '12px 16px',
-      boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+      padding: '16px 20px',
+      boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
       zIndex: 100,
       display: 'flex',
       flexDirection: 'column',
-      gap: '8px'
+      gap: '10px'
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '13px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#007acc', fontWeight: 'bold' }}>
-          <History size={15} />
-          <span>Timeline Replay Mode</span>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#1e40af', fontWeight: '800', fontSize: '14px' }}>
+          <History size={16} />
+          <span>State Scrubbing Time-Machine: Snapshot #{snapshots.length > 0 ? currentIndex + 1 : 0} of {snapshots.length}</span>
         </div>
 
         <button
@@ -90,90 +95,116 @@ export const ReplayBar = ({ isOpen, onClose }) => {
           style={{
             background: 'none',
             border: 'none',
-            color: '#aaaaaa',
-            cursor: 'pointer'
+            color: '#64748b',
+            cursor: 'pointer',
+            padding: '2px'
           }}
         >
-          <X size={15} />
+          <X size={16} />
         </button>
       </div>
 
       {snapshots.length === 0 ? (
-        <div style={{ fontSize: '12px', color: '#aaaaaa', padding: '6px 0', textAlign: 'center' }}>
-          No snapshots recorded yet for this room. Draw on the whiteboard or edit code to generate timeline history!
+        <div style={{ fontSize: '13px', color: '#64748b', padding: '8px 0', textAlign: 'center', fontWeight: '500' }}>
+          No historical snapshots recorded yet for room {currentRoom}. Draw on the whiteboard or edit code to generate timeline history!
         </div>
       ) : (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ display: 'flex', gap: '4px' }}>
-            <button
-              onClick={() => setCurrentIndex(0)}
-              disabled={currentIndex === 0}
-              style={{
-                background: '#1e1e1e',
-                border: '1px solid #3e3e42',
-                color: '#ffffff',
-                padding: '4px 8px',
-                borderRadius: '4px',
-                cursor: 'pointer'
-              }}
-            >
-              <SkipBack size={13} />
-            </button>
+        <>
+          {/* Controls & Range Slider */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <div style={{ display: 'flex', gap: '4px' }}>
+              <button
+                onClick={() => setCurrentIndex(0)}
+                disabled={currentIndex === 0}
+                style={{
+                  backgroundColor: '#ffffff',
+                  border: '1px solid #cbd5e1',
+                  color: '#0f172a',
+                  padding: '5px 10px',
+                  borderRadius: '4px',
+                  cursor: currentIndex === 0 ? 'not-allowed' : 'pointer',
+                  opacity: currentIndex === 0 ? 0.5 : 1
+                }}
+              >
+                <SkipBack size={14} />
+              </button>
 
-            <button
-              onClick={() => setIsPlaying(!isPlaying)}
-              disabled={snapshots.length === 0}
+              <button
+                onClick={() => setIsPlaying(!isPlaying)}
+                disabled={snapshots.length === 0}
+                style={{
+                  backgroundColor: '#166534',
+                  border: '1px solid #14532d',
+                  color: '#ffffff',
+                  padding: '5px 14px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '13px',
+                  fontWeight: '700'
+                }}
+              >
+                {isPlaying ? <Pause size={14} /> : <Play size={14} />}
+                {isPlaying ? 'Pause' : 'Play'}
+              </button>
+
+              <button
+                onClick={() => setCurrentIndex(snapshots.length - 1)}
+                disabled={currentIndex === snapshots.length - 1}
+                style={{
+                  backgroundColor: '#ffffff',
+                  border: '1px solid #cbd5e1',
+                  color: '#0f172a',
+                  padding: '5px 10px',
+                  borderRadius: '4px',
+                  cursor: currentIndex === snapshots.length - 1 ? 'not-allowed' : 'pointer',
+                  opacity: currentIndex === snapshots.length - 1 ? 0.5 : 1
+                }}
+              >
+                <SkipForward size={14} />
+              </button>
+            </div>
+
+            {/* Slider track */}
+            <input
+              type="range"
+              min={0}
+              max={Math.max(0, snapshots.length - 1)}
+              value={currentIndex}
+              onChange={(e) => setCurrentIndex(parseInt(e.target.value))}
               style={{
-                background: '#007acc',
-                border: 'none',
-                color: '#ffffff',
-                padding: '4px 12px',
-                borderRadius: '4px',
+                flex: 1,
+                accentColor: '#2563eb',
                 cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                fontSize: '12px',
-                fontWeight: 'bold'
+                height: '6px'
               }}
-            >
-              {isPlaying ? <Pause size={13} /> : <Play size={13} />}
-              {isPlaying ? 'Pause' : 'Play'}
-            </button>
-
-            <button
-              onClick={() => setCurrentIndex(snapshots.length - 1)}
-              disabled={currentIndex === snapshots.length - 1}
-              style={{
-                background: '#1e1e1e',
-                border: '1px solid #3e3e42',
-                color: '#ffffff',
-                padding: '4px 8px',
-                borderRadius: '4px',
-                cursor: 'pointer'
-              }}
-            >
-              <SkipForward size={13} />
-            </button>
+            />
           </div>
 
-          <input
-            type="range"
-            min={0}
-            max={Math.max(0, snapshots.length - 1)}
-            value={currentIndex}
-            onChange={(e) => setCurrentIndex(parseInt(e.target.value))}
-            style={{
-              flex: 1,
-              accentColor: '#007acc',
-              cursor: 'pointer'
-            }}
-          />
-
-          <span style={{ fontSize: '12px', color: '#aaaaaa', fontFamily: 'monospace' }}>
-            {currentIndex + 1}/{snapshots.length}
-          </span>
-        </div>
+          {/* Bottom Captions matching reference image */}
+          <div style={{
+            display: 'flex',
+            justify: 'space-between',
+            alignItems: 'center',
+            fontSize: '11px',
+            color: '#475569',
+            fontWeight: '600',
+            fontFamily: 'monospace',
+            marginTop: '2px'
+          }}>
+            <div>
+              v1: {firstSnap ? new Date(firstSnap.timestamp).toLocaleTimeString() : 'Initial'}
+            </div>
+            <div style={{ color: '#1e40af', fontWeight: '700' }}>
+              Selected: {currentSnap ? `${new Date(currentSnap.timestamp).toLocaleTimeString()} (${currentSnap.shapes?.length || 0} shapes)` : 'None'}
+            </div>
+            <div>
+              v{snapshots.length}: {lastSnap ? new Date(lastSnap.timestamp).toLocaleTimeString() : 'Latest'}
+            </div>
+          </div>
+        </>
       )}
     </div>
   );

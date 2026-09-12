@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useSocket } from '../context/SocketContext';
-import { Users, Copy, Check, LogOut, History } from 'lucide-react';
+import { Users, Copy, Check, LogOut, History, Radio } from 'lucide-react';
 import { ReplayBar } from './Replay/ReplayBar';
 
 export const Header = () => {
@@ -19,151 +19,183 @@ export const Header = () => {
   return (
     <>
       <header style={{
-        height: '48px',
-        backgroundColor: '#252526',
-        borderBottom: '1px solid #3e3e42',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '0 16px',
+        backgroundColor: '#ffffff',
+        borderBottom: '1px solid #cbd5e1',
+        padding: '12px 20px',
+        boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
         userSelect: 'none'
       }}>
-        {/* Left: App Title & Status */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontWeight: 'bold', fontSize: '16px', color: '#ffffff' }}>
-              SyncSpace
-            </span>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          {/* Left Title & Subtitle */}
+          <div>
+            <h1 style={{
+              fontSize: '22px',
+              fontWeight: '800',
+              color: '#0f172a',
+              letterSpacing: '-0.02em',
+              lineHeight: '1.2'
+            }}>
+              SyncSpace — Real-Time Collaborative Workspace
+            </h1>
+            <p style={{
+              fontSize: '12px',
+              color: '#64748b',
+              marginTop: '2px',
+              fontWeight: '500'
+            }}>
+              CQRS Architecture • Yjs CRDT Synchronization • Monaco Editor & Whiteboard Canvas
+            </p>
           </div>
 
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            fontSize: '12px',
-            color: isConnected ? '#5cb85c' : '#d9534f'
-          }}>
-            <span style={{
-              width: '8px',
-              height: '8px',
-              borderRadius: '50%',
-              backgroundColor: isConnected ? '#5cb85c' : '#d9534f',
-              display: 'inline-block'
-            }} />
-            <span>{isConnected ? 'Online' : 'Connecting'}</span>
-          </div>
-        </div>
-
-        {/* Center: Room Code, Replay, & Astra AI */}
-        {currentRoom && (
+          {/* Right Controls */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {/* Connection Status Badge */}
             <div style={{
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              backgroundColor: '#1e1e1e',
-              border: '1px solid #3e3e42',
+              backgroundColor: isConnected ? '#f0fdf4' : '#fef2f2',
+              border: `1px solid ${isConnected ? '#bbf7d0' : '#fecaca'}`,
               borderRadius: '4px',
-              padding: '4px 10px',
-              fontSize: '13px'
+              padding: '5px 10px',
+              fontSize: '12px',
+              fontWeight: '600',
+              color: isConnected ? '#166534' : '#dc2626'
             }}>
-              <span style={{ color: '#888888', fontWeight: '500' }}>Room:</span>
-              <span style={{ fontWeight: 'bold', color: '#ffffff', fontFamily: 'monospace' }}>
-                {currentRoom}
-              </span>
+              <span style={{
+                width: '7px',
+                height: '7px',
+                borderRadius: '50%',
+                backgroundColor: isConnected ? '#16a34a' : '#dc2626',
+                display: 'inline-block'
+              }} />
+              <span>{isConnected ? 'Online & Synced' : 'Connecting...'}</span>
+            </div>
+
+            {/* Room Code Badge */}
+            {currentRoom && (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                backgroundColor: '#ffffff',
+                border: '1px solid #cbd5e1',
+                borderRadius: '4px',
+                padding: '4px 10px',
+                fontSize: '13px'
+              }}>
+                <span style={{ color: '#475569', fontWeight: '600' }}>Room:</span>
+                <span style={{ fontWeight: '700', color: '#0f172a', fontFamily: 'monospace' }}>
+                  {currentRoom}
+                </span>
+                <button
+                  onClick={handleCopyRoomId}
+                  title="Copy Room Code"
+                  style={{
+                    background: '#f1f5f9',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '3px',
+                    color: copied ? '#166534' : '#334155',
+                    cursor: 'pointer',
+                    padding: '3px 6px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    fontSize: '11px',
+                    fontWeight: '600'
+                  }}
+                >
+                  {copied ? <Check size={12} /> : <Copy size={12} />}
+                  {copied ? 'Copied' : 'Copy'}
+                </button>
+              </div>
+            )}
+
+            {/* Replay History Button */}
+            {currentRoom && (
               <button
-                onClick={handleCopyRoomId}
-                title="Copy Room Code"
+                onClick={() => setShowReplay(!showReplay)}
                 style={{
-                  background: 'none',
-                  border: 'none',
-                  color: copied ? '#5cb85c' : '#cccccc',
+                  backgroundColor: showReplay ? '#1e5617' : '#166534',
+                  color: '#ffffff',
+                  border: '1px solid #14532d',
+                  padding: '6px 12px',
+                  borderRadius: '4px',
+                  fontSize: '13px',
+                  fontWeight: '600',
                   cursor: 'pointer',
-                  padding: '2px',
                   display: 'flex',
-                  alignItems: 'center'
+                  alignItems: 'center',
+                  gap: '6px',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
                 }}
               >
-                {copied ? <Check size={14} /> : <Copy size={14} />}
+                <History size={14} />
+                <span>Replay History</span>
               </button>
-            </div>
+            )}
 
-            <button
-              onClick={() => setShowReplay(!showReplay)}
-              style={{
-                backgroundColor: showReplay ? '#007acc' : '#333333',
-                color: '#ffffff',
-                border: '1px solid #3e3e42',
-                padding: '4px 10px',
-                borderRadius: '4px',
-                fontSize: '12px',
-                fontWeight: '500',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px'
-              }}
-            >
-              <History size={14} />
-              <span>Replay History</span>
-            </button>
-          </div>
-        )}
-
-        {/* Right: Active Users & Leave */}
-        {currentRoom && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Users size={16} style={{ color: '#888888' }} />
-              <div style={{ display: 'flex', alignItems: 'center' }}>
-                {roomUsers.map((user, idx) => (
-                  <div
-                    key={user.socketId || idx}
-                    title={`${user.username} ${user.socketId === currentUser?.socketId ? '(You)' : ''}`}
-                    style={{
-                      width: '24px',
-                      height: '24px',
-                      borderRadius: '50%',
-                      backgroundColor: user.color || '#007acc',
-                      color: '#ffffff',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '11px',
-                      fontWeight: 'bold',
-                      border: '1px solid #252526',
-                      marginLeft: idx === 0 ? 0 : '-6px'
-                    }}
-                  >
-                    {user.username.charAt(0).toUpperCase()}
+            {/* User Avatars & Leave Button */}
+            {currentRoom && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginLeft: '4px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <Users size={15} style={{ color: '#64748b' }} />
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    {roomUsers.map((user, idx) => (
+                      <div
+                        key={user.socketId || idx}
+                        title={`${user.username} ${user.socketId === currentUser?.socketId ? '(You)' : ''}`}
+                        style={{
+                          width: '26px',
+                          height: '26px',
+                          borderRadius: '50%',
+                          backgroundColor: user.color || '#2563eb',
+                          color: '#ffffff',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '11px',
+                          fontWeight: 'bold',
+                          border: '2px solid #ffffff',
+                          marginLeft: idx === 0 ? 0 : '-8px',
+                          boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
+                        }}
+                      >
+                        {user.username.charAt(0).toUpperCase()}
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-              <span style={{ fontSize: '12px', color: '#aaaaaa' }}>
-                ({roomUsers.length})
-              </span>
-            </div>
+                  <span style={{ fontSize: '12px', color: '#475569', fontWeight: '600', marginLeft: '4px' }}>
+                    ({roomUsers.length})
+                  </span>
+                </div>
 
-            <button
-              onClick={leaveRoom}
-              style={{
-                backgroundColor: '#333333',
-                border: '1px solid #3e3e42',
-                color: '#ff6b6b',
-                padding: '4px 10px',
-                borderRadius: '4px',
-                fontSize: '12px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px'
-              }}
-            >
-              <LogOut size={14} />
-              Leave
-            </button>
+                <button
+                  onClick={leaveRoom}
+                  style={{
+                    backgroundColor: '#ffffff',
+                    border: '1px solid #fecaca',
+                    color: '#dc2626',
+                    padding: '5px 10px',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  <LogOut size={13} />
+                  Leave
+                </button>
+              </div>
+            )}
           </div>
-        )}
+        </div>
+
+        {/* Horizontal Line under Header */}
+        <hr style={{ border: 'none', borderBottom: '1px solid #cbd5e1', marginTop: '12px' }} />
       </header>
 
       <ReplayBar isOpen={showReplay} onClose={() => setShowReplay(false)} />

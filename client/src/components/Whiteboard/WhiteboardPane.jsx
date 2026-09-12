@@ -4,7 +4,7 @@ import { useYjsCanvas } from '../../hooks/useYjsCanvas';
 import { useSocket } from '../../context/SocketContext';
 import { Pencil, Square, Type, Eraser, Trash2, History } from 'lucide-react';
 
-const COLORS = ['#ffffff', '#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#ec4899'];
+const COLORS = ['#0f172a', '#dc2626', '#2563eb', '#166534', '#d97706', '#9333ea'];
 const STROKE_WIDTHS = [{ label: 'Thin', value: 2 }, { label: 'Medium', value: 4 }, { label: 'Thick', value: 8 }];
 
 export const WhiteboardPane = () => {
@@ -14,7 +14,7 @@ export const WhiteboardPane = () => {
   const displayShapes = replaySnapshot ? (replaySnapshot.shapes || []) : shapes;
 
   const [tool, setTool] = useState('pencil');
-  const [selectedColor, setSelectedColor] = useState('#3b82f6');
+  const [selectedColor, setSelectedColor] = useState('#2563eb');
   const [strokeWidth, setStrokeWidth] = useState(4);
   const [isDrawing, setIsDrawing] = useState(false);
   const [textInput, setTextInput] = useState({ visible: false, x: 0, y: 0, value: '' });
@@ -155,39 +155,47 @@ export const WhiteboardPane = () => {
         width: '100%',
         display: 'flex',
         flexDirection: 'column',
-        backgroundColor: '#181818',
+        backgroundColor: '#ffffff',
         position: 'relative',
         overflow: 'hidden',
       }}
     >
-      {/* Basic Whiteboard Toolbar */}
+      {/* Whiteboard Toolbar Header */}
       <div style={{
-        height: '42px',
-        backgroundColor: '#252526',
-        borderBottom: '1px solid #3e3e42',
+        backgroundColor: '#f8fafc',
+        borderBottom: '1px solid #cbd5e1',
+        padding: '8px 12px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '0 12px',
+        flexWrap: 'wrap',
+        gap: '8px',
         zIndex: 10
       }}>
-        {/* Tools */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ display: 'flex', gap: '2px', backgroundColor: '#1e1e1e', padding: '2px', borderRadius: '4px', border: '1px solid #3e3e42' }}>
+        {/* Panel Title & Tools */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{ fontSize: '13px', fontWeight: '800', color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+            Whiteboard Canvas
+          </span>
+
+          <div style={{ height: '16px', width: '1px', backgroundColor: '#cbd5e1' }} />
+
+          <div style={{ display: 'flex', gap: '4px', backgroundColor: '#ffffff', padding: '2px', borderRadius: '4px', border: '1px solid #cbd5e1' }}>
             <button
               onClick={() => setTool('pencil')}
               title="Pencil"
               style={{
-                backgroundColor: tool === 'pencil' ? '#007acc' : 'transparent',
-                color: '#ffffff',
+                backgroundColor: tool === 'pencil' ? '#166534' : 'transparent',
+                color: tool === 'pencil' ? '#ffffff' : '#0f172a',
                 border: 'none',
-                padding: '4px 8px',
+                padding: '4px 10px',
                 borderRadius: '3px',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '4px',
-                fontSize: '12px'
+                gap: '5px',
+                fontSize: '12px',
+                fontWeight: '700'
               }}
             >
               <Pencil size={13} /> Pencil
@@ -197,16 +205,17 @@ export const WhiteboardPane = () => {
               onClick={() => setTool('rectangle')}
               title="Rectangle"
               style={{
-                backgroundColor: tool === 'rectangle' ? '#007acc' : 'transparent',
-                color: '#ffffff',
+                backgroundColor: tool === 'rectangle' ? '#166534' : 'transparent',
+                color: tool === 'rectangle' ? '#ffffff' : '#0f172a',
                 border: 'none',
-                padding: '4px 8px',
+                padding: '4px 10px',
                 borderRadius: '3px',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '4px',
-                fontSize: '12px'
+                gap: '5px',
+                fontSize: '12px',
+                fontWeight: '700'
               }}
             >
               <Square size={13} /> Rect
@@ -216,16 +225,17 @@ export const WhiteboardPane = () => {
               onClick={() => setTool('text')}
               title="Text"
               style={{
-                backgroundColor: tool === 'text' ? '#007acc' : 'transparent',
-                color: '#ffffff',
+                backgroundColor: tool === 'text' ? '#166534' : 'transparent',
+                color: tool === 'text' ? '#ffffff' : '#0f172a',
                 border: 'none',
-                padding: '4px 8px',
+                padding: '4px 10px',
                 borderRadius: '3px',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '4px',
-                fontSize: '12px'
+                gap: '5px',
+                fontSize: '12px',
+                fontWeight: '700'
               }}
             >
               <Type size={13} /> Text
@@ -235,53 +245,56 @@ export const WhiteboardPane = () => {
               onClick={() => setTool('eraser')}
               title="Eraser"
               style={{
-                backgroundColor: tool === 'eraser' ? '#d9534f' : 'transparent',
-                color: '#ffffff',
+                backgroundColor: tool === 'eraser' ? '#dc2626' : 'transparent',
+                color: tool === 'eraser' ? '#ffffff' : '#0f172a',
                 border: 'none',
-                padding: '4px 8px',
+                padding: '4px 10px',
                 borderRadius: '3px',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '4px',
-                fontSize: '12px'
+                gap: '5px',
+                fontSize: '12px',
+                fontWeight: '700'
               }}
             >
               <Eraser size={13} /> Eraser
             </button>
           </div>
 
-          {/* Color Options */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '6px' }}>
+          {/* Color Swatches */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '4px' }}>
             {COLORS.map((c) => (
               <button
                 key={c}
                 onClick={() => setSelectedColor(c)}
                 style={{
-                  width: '16px',
-                  height: '16px',
+                  width: '18px',
+                  height: '18px',
                   borderRadius: '50%',
                   backgroundColor: c,
-                  border: selectedColor === c ? '2px solid #ffffff' : '1px solid #3e3e42',
-                  cursor: 'pointer'
+                  border: selectedColor === c ? '2px solid #0f172a' : '1px solid #cbd5e1',
+                  cursor: 'pointer',
+                  boxShadow: selectedColor === c ? '0 0 0 1px #ffffff' : 'none'
                 }}
               />
             ))}
           </div>
 
-          {/* Stroke Width Options */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '6px' }}>
+          {/* Stroke Width Buttons */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '4px' }}>
             {STROKE_WIDTHS.map((sw) => (
               <button
                 key={sw.value}
                 onClick={() => setStrokeWidth(sw.value)}
                 style={{
-                  backgroundColor: strokeWidth === sw.value ? '#007acc' : '#1e1e1e',
-                  color: '#ffffff',
-                  border: '1px solid #3e3e42',
-                  padding: '2px 6px',
+                  backgroundColor: strokeWidth === sw.value ? '#2563eb' : '#ffffff',
+                  color: strokeWidth === sw.value ? '#ffffff' : '#334155',
+                  border: '1px solid #cbd5e1',
+                  padding: '3px 7px',
                   borderRadius: '3px',
                   fontSize: '11px',
+                  fontWeight: '700',
                   cursor: 'pointer'
                 }}
               >
@@ -291,16 +304,17 @@ export const WhiteboardPane = () => {
           </div>
         </div>
 
-        {/* Clear Canvas */}
+        {/* Clear Button */}
         <button
           onClick={clearCanvas}
           style={{
-            backgroundColor: '#333333',
-            color: '#ff6b6b',
-            border: '1px solid #3e3e42',
-            padding: '4px 8px',
+            backgroundColor: '#fef2f2',
+            color: '#dc2626',
+            border: '1px solid #fecaca',
+            padding: '4px 10px',
             borderRadius: '4px',
             fontSize: '12px',
+            fontWeight: '700',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
@@ -311,30 +325,34 @@ export const WhiteboardPane = () => {
         </button>
       </div>
 
-      {/* Replay Banner Indicator */}
+      {/* Replay Mode Banner */}
       {replaySnapshot && (
         <div style={{
-          backgroundColor: '#007acc',
-          color: '#ffffff',
-          padding: '6px 12px',
+          backgroundColor: '#eff6ff',
+          borderBottom: '1px solid #bfdbfe',
+          color: '#1e40af',
+          padding: '6px 14px',
           fontSize: '12px',
-          fontWeight: 'bold',
+          fontWeight: '700',
           display: 'flex',
           alignItems: 'center',
           gap: '6px',
           zIndex: 20
         }}>
           <History size={14} />
-          <span>REPLAY MODE (Read Only) — Snapshot at {new Date(replaySnapshot.timestamp).toLocaleTimeString()} ({displayShapes.length} Shapes)</span>
+          <span>TIME-MACHINE REPLAY (Read Only) — Snapshot at {new Date(replaySnapshot.timestamp).toLocaleTimeString()} ({displayShapes.length} Shapes)</span>
         </div>
       )}
 
-      {/* Canvas */}
+      {/* Konva Canvas */}
       <div
         ref={canvasContainerRef}
         style={{
           flex: 1,
           position: 'relative',
+          backgroundColor: '#ffffff',
+          backgroundImage: 'radial-gradient(#e2e8f0 1px, transparent 1px)',
+          backgroundSize: '20px 20px',
           cursor: replaySnapshot ? 'default' : tool === 'eraser' ? 'cell' : tool === 'text' ? 'text' : 'crosshair'
         }}
       >
@@ -370,7 +388,7 @@ export const WhiteboardPane = () => {
                     height={shape.height}
                     stroke={shape.color}
                     strokeWidth={shape.strokeWidth}
-                    fill={shape.color + '22'}
+                    fill={shape.color + '15'}
                     cornerRadius={2}
                     onClick={() => handleShapeClick(shape.id)}
                   />
@@ -385,6 +403,7 @@ export const WhiteboardPane = () => {
                     fill={shape.color}
                     fontSize={shape.fontSize || 18}
                     fontFamily="sans-serif"
+                    fontStyle="bold"
                     onClick={() => handleShapeClick(shape.id)}
                   />
                 );
@@ -406,19 +425,21 @@ export const WhiteboardPane = () => {
               position: 'absolute',
               top: `${textInput.y}px`,
               left: `${textInput.x}px`,
-              backgroundColor: '#1e1e1e',
+              backgroundColor: '#ffffff',
               color: selectedColor,
-              border: `1px solid ${selectedColor}`,
+              border: `2px solid ${selectedColor}`,
               borderRadius: '4px',
               padding: '4px 8px',
               fontSize: '14px',
+              fontWeight: '700',
               outline: 'none',
-              zIndex: 30
+              zIndex: 30,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
             }}
           />
         )}
 
-        {/* Cursors */}
+        {/* Remote Cursors */}
         {Object.values(remoteCursors).map((rc) => {
           if (!rc.cursor) return null;
           return (
@@ -436,22 +457,23 @@ export const WhiteboardPane = () => {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                 <path
                   d="M5.65376 12.3673H5.46026L5.31717 12.4976L0.500002 16.8829L0.500002 1.19841L11.7841 12.3673H5.65376Z"
-                  fill={rc.color || '#007acc'}
+                  fill={rc.color || '#2563eb'}
                   stroke="#ffffff"
                   strokeWidth="1.5"
                 />
               </svg>
               <div
                 style={{
-                  backgroundColor: rc.color || '#007acc',
+                  backgroundColor: rc.color || '#2563eb',
                   color: '#ffffff',
                   fontSize: '11px',
-                  fontWeight: 'bold',
-                  padding: '1px 5px',
+                  fontWeight: '700',
+                  padding: '2px 6px',
                   borderRadius: '3px',
                   whiteSpace: 'nowrap',
                   marginTop: '-2px',
-                  marginLeft: '10px'
+                  marginLeft: '10px',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.15)'
                 }}
               >
                 {rc.username}

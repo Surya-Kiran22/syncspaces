@@ -30,85 +30,95 @@ export const CodeEditorPane = () => {
       width: '100%',
       display: 'flex',
       flexDirection: 'column',
-      backgroundColor: '#1e1e1e',
+      backgroundColor: '#ffffff',
       position: 'relative',
       overflow: 'hidden'
     }}>
-      {/* Basic Code Editor Toolbar */}
+      {/* Code Editor Toolbar Header */}
       <div style={{
-        height: '42px',
-        backgroundColor: '#252526',
-        borderBottom: '1px solid #3e3e42',
+        backgroundColor: '#f8fafc',
+        borderBottom: '1px solid #cbd5e1',
+        padding: '8px 12px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '0 12px',
         zIndex: 10
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Code size={16} style={{ color: '#007acc' }} />
-          <select
-            value={language}
-            onChange={(e) => updateLanguage(e.target.value)}
-            disabled={!!replaySnapshot}
-            style={{
-              backgroundColor: '#1e1e1e',
-              color: '#ffffff',
-              border: '1px solid #3e3e42',
-              borderRadius: '4px',
-              padding: '3px 8px',
-              fontSize: '12px',
-              outline: 'none',
-              cursor: replaySnapshot ? 'not-allowed' : 'pointer'
-            }}
-          >
-            <option value="javascript">JavaScript</option>
-            <option value="python">Python</option>
-            <option value="cpp">C++</option>
-            <option value="typescript">TypeScript</option>
-            <option value="html">HTML</option>
-          </select>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{ fontSize: '13px', fontWeight: '800', color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+            Code Editor Panel
+          </span>
+
+          <div style={{ height: '16px', width: '1px', backgroundColor: '#cbd5e1' }} />
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Code size={15} style={{ color: '#2563eb' }} />
+            <select
+              value={language}
+              onChange={(e) => updateLanguage(e.target.value)}
+              disabled={!!replaySnapshot}
+              style={{
+                backgroundColor: '#ffffff',
+                color: '#0f172a',
+                border: '1px solid #cbd5e1',
+                borderRadius: '4px',
+                padding: '4px 10px',
+                fontSize: '12px',
+                fontWeight: '700',
+                outline: 'none',
+                cursor: replaySnapshot ? 'not-allowed' : 'pointer'
+              }}
+            >
+              <option value="javascript">JavaScript</option>
+              <option value="python">Python</option>
+              <option value="cpp">C++</option>
+              <option value="typescript">TypeScript</option>
+              <option value="html">HTML</option>
+            </select>
+          </div>
         </div>
 
         <button
           onClick={handleCopyCode}
           style={{
-            backgroundColor: '#1e1e1e',
-            color: copied ? '#5cb85c' : '#cccccc',
-            border: '1px solid #3e3e42',
-            padding: '3px 8px',
+            backgroundColor: '#ffffff',
+            color: copied ? '#166534' : '#334155',
+            border: '1px solid #cbd5e1',
+            padding: '4px 10px',
             borderRadius: '4px',
             fontSize: '12px',
+            fontWeight: '700',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
-            gap: '4px'
+            gap: '5px'
           }}
         >
           {copied ? <Check size={13} /> : <Copy size={13} />}
-          {copied ? 'Copied' : 'Copy'}
+          {copied ? 'Copied' : 'Copy Code'}
         </button>
       </div>
 
-      {/* Replay Banner Indicator */}
+      {/* Replay Mode Indicator Banner */}
       {replaySnapshot && (
         <div style={{
-          backgroundColor: '#007acc',
-          color: '#ffffff',
-          padding: '6px 12px',
+          backgroundColor: '#eff6ff',
+          borderBottom: '1px solid #bfdbfe',
+          color: '#1e40af',
+          padding: '6px 14px',
           fontSize: '12px',
-          fontWeight: 'bold',
+          fontWeight: '700',
           display: 'flex',
           alignItems: 'center',
           gap: '6px',
           zIndex: 20
         }}>
           <History size={14} />
-          <span>REPLAY MODE (Read Only) — Snapshot at {new Date(replaySnapshot.timestamp).toLocaleTimeString()}</span>
+          <span>TIME-MACHINE REPLAY (Read Only) — Snapshot at {new Date(replaySnapshot.timestamp).toLocaleTimeString()}</span>
         </div>
       )}
 
-      {/* Editor */}
+      {/* Monaco Light Editor */}
       <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
         <Editor
           height="100%"
@@ -116,7 +126,7 @@ export const CodeEditorPane = () => {
           value={displayCode}
           onChange={(value) => !replaySnapshot && updateCode(value || '')}
           onMount={handleEditorDidMount}
-          theme="vs-dark"
+          theme="vs"
           options={{
             readOnly: !!replaySnapshot,
             fontSize: 14,
@@ -126,24 +136,28 @@ export const CodeEditorPane = () => {
             automaticLayout: true,
             tabSize: 2,
             lineNumbersMinChars: 3,
-            padding: { top: 8, bottom: 8 }
+            padding: { top: 10, bottom: 10 }
           }}
         />
       </div>
 
-      {/* Status Bar */}
+      {/* Bottom Status Bar */}
       <div style={{
-        height: '24px',
-        backgroundColor: replaySnapshot ? '#d9534f' : '#007acc',
-        color: '#ffffff',
+        height: '26px',
+        backgroundColor: '#f1f5f9',
+        borderTop: '1px solid #cbd5e1',
+        color: '#475569',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '0 12px',
-        fontSize: '11px'
+        padding: '0 14px',
+        fontSize: '11px',
+        fontWeight: '600'
       }}>
-        <div>Language: {language.toUpperCase()}</div>
-        <div>{replaySnapshot ? 'REPLAY TIMELINE VIEW (Read Only)' : 'Real-Time Sync Active'}</div>
+        <div>Language: <span style={{ color: '#0f172a', fontWeight: '700' }}>{language.toUpperCase()}</span></div>
+        <div style={{ color: replaySnapshot ? '#dc2626' : '#166534', fontWeight: '700' }}>
+          {replaySnapshot ? '● REPLAY TIMELINE VIEW (Read Only)' : '● CRDT Yjs Synchronization Active'}
+        </div>
       </div>
     </div>
   );
