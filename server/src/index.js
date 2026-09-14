@@ -13,6 +13,7 @@ import authRoutes from './routes/authRoutes.js';
 import executeRoutes from './routes/executeRoutes.js';
 import { registerRoomHandlers } from './socket/roomHandler.js';
 import { socketAuthMiddleware } from './middleware/auth.js';
+import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 
 dotenv.config();
 
@@ -79,6 +80,10 @@ if (process.env.NODE_ENV === 'production') {
     res.send('SyncSpace API Server is Active');
   });
 }
+
+// Global 404 & Error Handling Middlewares
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 // Start HTTP Server
 httpServer.listen(PORT, () => {
