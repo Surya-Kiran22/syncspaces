@@ -1,16 +1,23 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Stage, Layer, Rect, Circle, Line, Text, Transformer, Group } from 'react-konva';
-import { MousePointer, Pencil, Minus, Square, Circle as CircleIcon, Type, Eraser } from 'lucide-react';
+import { MousePointer, Pencil, Minus, Square, Circle as CircleIcon, Type, Eraser, Hand, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
+
+const COLOR_PRESETS = ['#0f172a', '#dc2626', '#2563eb', '#166534', '#d97706', '#9333ea'];
+const STROKE_WIDTH_OPTIONS = [
+  { label: 'Thin', value: 2 },
+  { label: 'Medium', value: 4 },
+  { label: 'Thick', value: 8 }
+];
 
 /**
- * KonvaCanvasBase Component — Module M5 (Part 3: 41% - 60% Geometric Shapes, Interactive Text & Konva Transformer Handles)
+ * KonvaCanvasBase Component — Module M5 (Part 4: 61% - 80% Color Palette, Stroke Styling & Stage Pan/Zoom Engine)
  * 
  * Includes:
  * - Konva Stage & Layer baseline hierarchy (Part 1 - 20%)
  * - Tool State Management & Freehand / Line Drawing (Part 2 - 40%)
- * - Geometric Shape Renderers (Rectangles & Circles) (Part 3 - 60%)
- * - Interactive Text Node Controls (Part 3 - 60%)
- * - Konva Transformer Resize & Rotate Selection Handles (Part 3 - 60%)
+ * - Geometric Shapes & Text Renderer & Konva Transformer Handles (Part 3 - 60%)
+ * - Color Palette Picker Bar & Stroke Width Selector (Part 4 - 80%)
+ * - Stage Pan Navigation (Hand Tool) & Mouse Wheel Focal Point Zooming (Part 4 - 80%)
  */
 export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStageRef }) => {
   const containerRef = useRef(null);
@@ -18,19 +25,21 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
   const stageRef = externalStageRef || internalStageRef;
   const trRef = useRef(null);
 
-  // Viewport State
+  // Viewport & Transform State (Part 1 + Part 4)
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const [stageScale, setStageScale] = useState(1);
   const [stagePos, setStagePos] = useState({ x: 0, y: 0 });
   const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const panStartRef = useRef({ x: 0, y: 0 });
 
-  // Tool & Canvas State (Part 1 + Part 2 + Part 3)
-  const [activeTool, setActiveTool] = useState('pencil'); // 'select', 'pencil', 'line', 'rectangle', 'circle', 'text', 'eraser'
+  // Tool & Canvas State (Part 1 + Part 2 + Part 3 + Part 4)
+  const [activeTool, setActiveTool] = useState('pencil'); // 'select', 'hand', 'pencil', 'line', 'rectangle', 'circle', 'text', 'eraser'
   const [selectedColor, setSelectedColor] = useState('#2563eb');
-  const [strokeWidth, setStrokeWidth] = useState(3);
+  const [strokeWidth, setStrokeWidth] = useState(4);
   const [isDrawing, setIsDrawing] = useState(false);
 
-  // Shape Data Lists
+  // Shape Data Lists & Selection
   const [shapes, setShapes] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
 
@@ -81,9 +90,73 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
     }
   }, [selectedId, activeTool, stageRef]);
 
-  // Mouse Down Event Handler — Creation Initialization
+  // Update Color of Currently Selected Shape
+  const handleColorChange = (color) => {
+    setSelectedColor(color);
+    if (selectedId) {
+      setShapes((prev) =>
+        prev.map((s) => (s.id === selectedId ? { ...s, color } : s))
+      );
+    }
+  };
+
+  // Update Stroke Width of Currently Selected Shape
+  const handleStrokeWidthChange = (width) => {
+    setStrokeWidth(width);
+    if (selectedId) {
+      setShapes((prev) =>
+        prev.map((s) => (s.id === selectedId ? { ...s, strokeWidth: width } : s))
+      );
+    }
+  };
+
+  // Focal Point Wheel Zoom Engine — Part 4 (61% - 80%)
+  const handleWheel = useCallback((e) => {
+    e.evt.preventDefault();
+    const stage = stageRef.current;
+    if (!stage) return;
+
+    const scaleBy = 1.08;
+    const oldScale = stageScale;
+    const pointer = stage.getPointerPosition();
+    if (!pointer) return;
+
+    const mousePointTo = {
+      x: (pointer.x - stagePos.x) / oldScale,
+      y: (pointer.y - stagePos.y) / oldScale,
+    };
+
+    const newScale = e.evt.deltaY < 0 ? oldScale * scaleBy : oldScale / scaleBy;
+    const clampedScale = Math.min(Math.max(newScale, 0.4), 3.5);
+
+    const newPos = {
+      x: pointer.x - mousePointTo.x * clampedScale,
+      y: pointer.y - mousePointTo.y * clampedScale,
+    };
+
+    setStageScale(clampedScale);
+    setStagePos(newPos);
+  }, [stageScale, stagePos, stageRef]);
+
+  // Zoom Reset Control
+  const resetZoomAndPan = () => {
+    setStageScale(1);
+    setStagePos({ x: 0, y: 0 });
+  };
+
+  // Mouse Down Handler — Creation & Pan Dragging Initialization
   const handleMouseDown = useCallback((e) => {
-    // If clicking on empty stage background in select mode, deselect shapes
+    const stage = e.target.getStage();
+    const point = stage.getPointerPosition();
+    if (!point) return;
+
+    // Pan Tool Drag Start
+    if (activeTool === 'hand' || e.evt.button === 1) {
+      setIsPanning(true);
+      panStartRef.current = { x: e.evt.clientX - stagePos.x, y: e.evt.clientY - stagePos.y };
+      return;
+    }
+
     const clickedOnEmpty = e.target === e.target.getStage() || e.target.hasName('bg-rect');
     if (activeTool === 'select') {
       if (clickedOnEmpty) {
@@ -91,10 +164,6 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
       }
       return;
     }
-
-    const stage = e.target.getStage();
-    const point = stage.getPointerPosition();
-    if (!point) return;
 
     const relativeX = (point.x - stagePos.x) / stageScale;
     const relativeY = (point.y - stagePos.y) / stageScale;
@@ -161,8 +230,16 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
     }
   }, [activeTool, selectedColor, strokeWidth, stagePos, stageScale]);
 
-  // Mouse Move Event Handler — Dynamic Geometry Preview
+  // Mouse Move Handler — Stage Pan & Dynamic Geometry Update
   const handleMouseMove = useCallback((e) => {
+    if (isPanning) {
+      setStagePos({
+        x: e.evt.clientX - panStartRef.current.x,
+        y: e.evt.clientY - panStartRef.current.y
+      });
+      return;
+    }
+
     const stage = stageRef.current;
     if (!stage) return;
     const pointer = stage.getPointerPosition();
@@ -213,10 +290,11 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
       currentShapeRef.current = updated;
       setShapes((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
     }
-  }, [isDrawing, stagePos, stageScale, stageRef]);
+  }, [isPanning, isDrawing, stagePos, stageScale, stageRef]);
 
-  // Mouse Up Handler — Finalize Creation
+  // Mouse Up Handler — Finalize Creation or Panning
   const handleMouseUp = useCallback(() => {
+    setIsPanning(false);
     setIsDrawing(false);
     currentShapeRef.current = null;
   }, []);
@@ -243,10 +321,10 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
   const renderGridDots = useCallback(() => {
     const dots = [];
     const gridSize = 30;
-    const startX = -gridSize * 10;
-    const startY = -gridSize * 10;
-    const endX = dimensions.width + gridSize * 10;
-    const endY = dimensions.height + gridSize * 10;
+    const startX = -gridSize * 15;
+    const startY = -gridSize * 15;
+    const endX = dimensions.width + gridSize * 15;
+    const endY = dimensions.height + gridSize * 15;
 
     for (let x = startX; x < endX; x += gridSize) {
       for (let y = startY; y < endY; y += gridSize) {
@@ -277,7 +355,7 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
         userSelect: 'none'
       }}
     >
-      {/* Floating Tool Switcher Bar — Part 3 (41% - 60% Geometric Shapes & Text) */}
+      {/* Floating Tool Switcher Bar — Part 4 (61% - 80% Full Tool Suite) */}
       <div
         style={{
           position: 'absolute',
@@ -286,12 +364,12 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
           transform: 'translateX(-50%)',
           display: 'flex',
           alignItems: 'center',
-          gap: '4px',
-          padding: '4px',
+          gap: '6px',
+          padding: '6px 10px',
           backgroundColor: '#ffffff',
           border: '1px solid #cbd5e1',
           borderRadius: '6px',
-          boxShadow: '0 2px 6px rgba(0,0,0,0.06)',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
           zIndex: 20
         }}
       >
@@ -301,7 +379,7 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
-            padding: '6px 12px',
+            padding: '6px 10px',
             borderRadius: '4px',
             border: 'none',
             backgroundColor: activeTool === 'select' ? '#166534' : 'transparent',
@@ -317,12 +395,35 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
         </button>
 
         <button
+          onClick={() => { setActiveTool('hand'); setSelectedId(null); }}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '6px 10px',
+            borderRadius: '4px',
+            border: 'none',
+            backgroundColor: activeTool === 'hand' ? '#166534' : 'transparent',
+            color: activeTool === 'hand' ? '#ffffff' : '#334155',
+            fontSize: '12px',
+            fontWeight: 700,
+            cursor: 'pointer'
+          }}
+          title="Pan Stage Tool (Hand)"
+        >
+          <Hand size={14} />
+          <span>Pan</span>
+        </button>
+
+        <span style={{ color: '#cbd5e1' }}>|</span>
+
+        <button
           onClick={() => setActiveTool('pencil')}
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
-            padding: '6px 12px',
+            padding: '6px 10px',
             borderRadius: '4px',
             border: 'none',
             backgroundColor: activeTool === 'pencil' ? '#166534' : 'transparent',
@@ -331,7 +432,7 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
             fontWeight: 700,
             cursor: 'pointer'
           }}
-          title="Pencil Tool"
+          title="Pencil Freehand Tool"
         >
           <Pencil size={14} />
           <span>Pencil</span>
@@ -343,7 +444,7 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
-            padding: '6px 12px',
+            padding: '6px 10px',
             borderRadius: '4px',
             border: 'none',
             backgroundColor: activeTool === 'line' ? '#166534' : 'transparent',
@@ -364,7 +465,7 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
-            padding: '6px 12px',
+            padding: '6px 10px',
             borderRadius: '4px',
             border: 'none',
             backgroundColor: activeTool === 'rectangle' ? '#166534' : 'transparent',
@@ -373,7 +474,7 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
             fontWeight: 700,
             cursor: 'pointer'
           }}
-          title="Rectangle Geometry Tool (Part 3)"
+          title="Rectangle Geometry Tool"
         >
           <Square size={14} />
           <span>Rectangle</span>
@@ -385,7 +486,7 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
-            padding: '6px 12px',
+            padding: '6px 10px',
             borderRadius: '4px',
             border: 'none',
             backgroundColor: activeTool === 'circle' ? '#166534' : 'transparent',
@@ -394,7 +495,7 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
             fontWeight: 700,
             cursor: 'pointer'
           }}
-          title="Circle Geometry Tool (Part 3)"
+          title="Circle Geometry Tool"
         >
           <CircleIcon size={14} />
           <span>Circle</span>
@@ -406,7 +507,7 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
-            padding: '6px 12px',
+            padding: '6px 10px',
             borderRadius: '4px',
             border: 'none',
             backgroundColor: activeTool === 'text' ? '#166534' : 'transparent',
@@ -415,7 +516,7 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
             fontWeight: 700,
             cursor: 'pointer'
           }}
-          title="Text Node Tool (Part 3)"
+          title="Text Node Tool"
         >
           <Type size={14} />
           <span>Text</span>
@@ -427,7 +528,7 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
-            padding: '6px 12px',
+            padding: '6px 10px',
             borderRadius: '4px',
             border: 'none',
             backgroundColor: activeTool === 'eraser' ? '#dc2626' : 'transparent',
@@ -441,6 +542,72 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
           <Eraser size={14} />
           <span>Eraser</span>
         </button>
+      </div>
+
+      {/* Floating Color Palette & Stroke Width Styling Controls — Part 4 (61% - 80%) */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '60px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          padding: '6px 12px',
+          backgroundColor: '#ffffff',
+          border: '1px solid #cbd5e1',
+          borderRadius: '6px',
+          boxShadow: '0 2px 6px rgba(0,0,0,0.06)',
+          zIndex: 20
+        }}
+      >
+        {/* Color Swatch Picker */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{ fontSize: '11px', fontWeight: 700, color: '#64748b' }}>Color:</span>
+          {COLOR_PRESETS.map((c) => (
+            <button
+              key={c}
+              onClick={() => handleColorChange(c)}
+              style={{
+                width: '18px',
+                height: '18px',
+                borderRadius: '50%',
+                backgroundColor: c,
+                border: selectedColor === c ? '2px solid #0f172a' : '1px solid #cbd5e1',
+                cursor: 'pointer',
+                transform: selectedColor === c ? 'scale(1.15)' : 'scale(1)',
+                transition: 'all 0.15s'
+              }}
+              title={c}
+            />
+          ))}
+        </div>
+
+        <span style={{ color: '#cbd5e1' }}>|</span>
+
+        {/* Stroke Width Selector */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{ fontSize: '11px', fontWeight: 700, color: '#64748b' }}>Width:</span>
+          {STROKE_WIDTH_OPTIONS.map((sw) => (
+            <button
+              key={sw.value}
+              onClick={() => handleStrokeWidthChange(sw.value)}
+              style={{
+                padding: '3px 8px',
+                borderRadius: '3px',
+                border: '1px solid #cbd5e1',
+                backgroundColor: strokeWidth === sw.value ? '#166534' : '#f8fafc',
+                color: strokeWidth === sw.value ? '#ffffff' : '#334155',
+                fontSize: '11px',
+                fontWeight: 700,
+                cursor: 'pointer'
+              }}
+            >
+              {sw.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* On-Canvas Interactive Text Entry Popup */}
@@ -485,20 +652,21 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
         scaleY={stageScale}
         x={stagePos.x}
         y={stagePos.y}
+        onWheel={handleWheel}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onClick={onStageClick}
-        style={{ cursor: activeTool === 'select' ? 'default' : 'crosshair' }}
+        style={{ cursor: activeTool === 'hand' ? 'grab' : activeTool === 'select' ? 'default' : 'crosshair' }}
       >
         {/* Layer 1: Background Grid */}
         <Layer id="background-layer">
           <Rect
             name="bg-rect"
-            x={0}
-            y={0}
-            width={dimensions.width}
-            height={dimensions.height}
+            x={-stagePos.x / stageScale}
+            y={-stagePos.y / stageScale}
+            width={dimensions.width / stageScale + 500}
+            height={dimensions.height / stageScale + 500}
             fill="#ffffff"
             listening={true}
           />
@@ -508,8 +676,6 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
         {/* Layer 2: Main Interactive Geometric & Vector Content Layer */}
         <Layer id="main-shapes-layer">
           {shapes.map((s) => {
-            const isSelected = s.id === selectedId;
-
             if (s.type === 'pencil' || s.type === 'line') {
               return (
                 <Line
@@ -583,7 +749,7 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
             return null;
           })}
 
-          {/* Konva Transformer Handle Overlay — Part 3 (41% - 60%) */}
+          {/* Konva Transformer Handle Overlay */}
           <Transformer
             ref={trRef}
             boundBoxFunc={(oldBox, newBox) => {
@@ -602,7 +768,7 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
         </Layer>
       </Stage>
 
-      {/* Engine Status & Viewport Diagnostics Overlay */}
+      {/* Engine Status & Viewport Zoom Diagnostics Overlay — Part 4 */}
       <div
         style={{
           position: 'absolute',
@@ -610,7 +776,7 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
           left: '12px',
           display: 'flex',
           alignItems: 'center',
-          gap: '12px',
+          gap: '10px',
           padding: '6px 12px',
           backgroundColor: 'rgba(255, 255, 255, 0.95)',
           border: '1px solid #e2e8f0',
@@ -620,18 +786,31 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
           color: '#64748b',
           boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
           backdropFilter: 'blur(4px)',
-          zIndex: 10,
-          pointerEvents: 'none'
+          zIndex: 10
         }}
       >
-        <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#2563eb' }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#2563eb', fontWeight: 700 }}>
           <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#22c55e' }} />
-          M5 Active Tool: {activeTool.toUpperCase()}
+          M5 Active: {activeTool.toUpperCase()}
         </span>
         <span>|</span>
-        <span>Shapes: {shapes.length}</span>
-        <span>|</span>
-        <span>Selected: {selectedId || 'None'}</span>
+        <span>Zoom: {Math.round(stageScale * 100)}%</span>
+        <button
+          onClick={resetZoomAndPan}
+          style={{
+            backgroundColor: '#f1f5f9',
+            border: '1px solid #cbd5e1',
+            borderRadius: '3px',
+            padding: '2px 6px',
+            fontSize: '10px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            color: '#334155'
+          }}
+          title="Reset Zoom & Pan Offset"
+        >
+          Reset
+        </button>
         <span>|</span>
         <span>Cursor: X: {cursorPos.x}, Y: {cursorPos.y}</span>
       </div>
