@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Stage, Layer, Rect, Circle, Line, Text, Transformer, Group } from 'react-konva';
-import { MousePointer, Pencil, Minus, Square, Circle as CircleIcon, Type, Eraser, Hand, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
+import { MousePointer, Pencil, Minus, Square, Circle as CircleIcon, Type, Eraser, Hand, Undo2, Redo2, Trash2, Download } from 'lucide-react';
 
 const COLOR_PRESETS = ['#0f172a', '#dc2626', '#2563eb', '#166534', '#d97706', '#9333ea'];
 const STROKE_WIDTH_OPTIONS = [
@@ -10,14 +10,14 @@ const STROKE_WIDTH_OPTIONS = [
 ];
 
 /**
- * KonvaCanvasBase Component — Module M5 (Part 4: 61% - 80% Color Palette, Stroke Styling & Stage Pan/Zoom Engine)
+ * KonvaCanvasBase Component — Module M5 (Part 5: 81% - 100% Final Complete M5 Konva.js Engine)
  * 
- * Includes:
+ * Full 100% M5 Feature Suite:
  * - Konva Stage & Layer baseline hierarchy (Part 1 - 20%)
  * - Tool State Management & Freehand / Line Drawing (Part 2 - 40%)
- * - Geometric Shapes & Text Renderer & Konva Transformer Handles (Part 3 - 60%)
- * - Color Palette Picker Bar & Stroke Width Selector (Part 4 - 80%)
- * - Stage Pan Navigation (Hand Tool) & Mouse Wheel Focal Point Zooming (Part 4 - 80%)
+ * - Geometric Shapes, Text Nodes & Transformer Selection Handles (Part 3 - 60%)
+ * - Color Palette Swatches, Stroke Width Selector & Stage Pan/Zoom (Part 4 - 80%)
+ * - Undo/Redo History Stack, Canvas Clear & PNG Image Export Engine (Part 5 - 100%)
  */
 export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStageRef }) => {
   const containerRef = useRef(null);
@@ -25,7 +25,7 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
   const stageRef = externalStageRef || internalStageRef;
   const trRef = useRef(null);
 
-  // Viewport & Transform State (Part 1 + Part 4)
+  // Viewport & Transform State
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const [stageScale, setStageScale] = useState(1);
   const [stagePos, setStagePos] = useState({ x: 0, y: 0 });
@@ -33,7 +33,7 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
   const [isPanning, setIsPanning] = useState(false);
   const panStartRef = useRef({ x: 0, y: 0 });
 
-  // Tool & Canvas State (Part 1 + Part 2 + Part 3 + Part 4)
+  // Tool & Styling State
   const [activeTool, setActiveTool] = useState('pencil'); // 'select', 'hand', 'pencil', 'line', 'rectangle', 'circle', 'text', 'eraser'
   const [selectedColor, setSelectedColor] = useState('#2563eb');
   const [strokeWidth, setStrokeWidth] = useState(4);
@@ -43,10 +43,64 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
   const [shapes, setShapes] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
 
+  // Part 5 (81% - 100%): Undo / Redo History Stack State
+  const [history, setHistory] = useState([[]]);
+  const [historyIndex, setHistoryIndex] = useState(0);
+
   // Text Input Overlay State
   const [textInput, setTextInput] = useState({ visible: false, x: 0, y: 0, value: '' });
 
   const currentShapeRef = useRef(null);
+
+  // Push State to History Stack
+  const recordHistory = useCallback((newShapes) => {
+    setHistory((prevHistory) => {
+      const updatedHistory = prevHistory.slice(0, historyIndex + 1);
+      return [...updatedHistory, newShapes];
+    });
+    setHistoryIndex((prevIndex) => prevIndex + 1);
+  }, [historyIndex]);
+
+  // Handle Undo Operation — Part 5
+  const handleUndo = () => {
+    if (historyIndex > 0) {
+      const nextIndex = historyIndex - 1;
+      setHistoryIndex(nextIndex);
+      setShapes(history[nextIndex]);
+      setSelectedId(null);
+    }
+  };
+
+  // Handle Redo Operation — Part 5
+  const handleRedo = () => {
+    if (historyIndex < history.length - 1) {
+      const nextIndex = historyIndex + 1;
+      setHistoryIndex(nextIndex);
+      setShapes(history[nextIndex]);
+      setSelectedId(null);
+    }
+  };
+
+  // Handle Clear Canvas Operation — Part 5
+  const handleClearCanvas = () => {
+    if (shapes.length === 0) return;
+    setShapes([]);
+    setSelectedId(null);
+    recordHistory([]);
+  };
+
+  // Handle PNG Image Export Engine — Part 5
+  const handleExportImage = () => {
+    const stage = stageRef.current;
+    if (!stage) return;
+    const dataURL = stage.toDataURL({ pixelRatio: 2 });
+    const link = document.createElement('a');
+    link.download = `syncspace-whiteboard-${Date.now()}.png`;
+    link.href = dataURL;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   // Auto-resize Stage based on parent container bounds
   useEffect(() => {
@@ -94,9 +148,9 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
   const handleColorChange = (color) => {
     setSelectedColor(color);
     if (selectedId) {
-      setShapes((prev) =>
-        prev.map((s) => (s.id === selectedId ? { ...s, color } : s))
-      );
+      const updated = shapes.map((s) => (s.id === selectedId ? { ...s, color } : s));
+      setShapes(updated);
+      recordHistory(updated);
     }
   };
 
@@ -104,13 +158,13 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
   const handleStrokeWidthChange = (width) => {
     setStrokeWidth(width);
     if (selectedId) {
-      setShapes((prev) =>
-        prev.map((s) => (s.id === selectedId ? { ...s, strokeWidth: width } : s))
-      );
+      const updated = shapes.map((s) => (s.id === selectedId ? { ...s, strokeWidth: width } : s));
+      setShapes(updated);
+      recordHistory(updated);
     }
   };
 
-  // Focal Point Wheel Zoom Engine — Part 4 (61% - 80%)
+  // Focal Point Wheel Zoom Engine
   const handleWheel = useCallback((e) => {
     e.evt.preventDefault();
     const stage = stageRef.current;
@@ -150,7 +204,6 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
     const point = stage.getPointerPosition();
     if (!point) return;
 
-    // Pan Tool Drag Start
     if (activeTool === 'hand' || e.evt.button === 1) {
       setIsPanning(true);
       panStartRef.current = { x: e.evt.clientX - stagePos.x, y: e.evt.clientY - stagePos.y };
@@ -292,12 +345,15 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
     }
   }, [isPanning, isDrawing, stagePos, stageScale, stageRef]);
 
-  // Mouse Up Handler — Finalize Creation or Panning
+  // Mouse Up Handler — Finalize Creation & Record History
   const handleMouseUp = useCallback(() => {
+    if (isDrawing && currentShapeRef.current) {
+      recordHistory(shapes);
+    }
     setIsPanning(false);
     setIsDrawing(false);
     currentShapeRef.current = null;
-  }, []);
+  }, [isDrawing, shapes, recordHistory]);
 
   // Submit Interactive Text Node
   const handleTextSubmit = (e) => {
@@ -312,7 +368,9 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
         color: selectedColor,
         fontSize: 18
       };
-      setShapes((prev) => [...prev, newTextShape]);
+      const updated = [...shapes, newTextShape];
+      setShapes(updated);
+      recordHistory(updated);
     }
     setTextInput({ visible: false, x: 0, y: 0, value: '' });
   };
@@ -355,7 +413,7 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
         userSelect: 'none'
       }}
     >
-      {/* Floating Tool Switcher Bar — Part 4 (61% - 80% Full Tool Suite) */}
+      {/* Floating Main Toolbar — Complete Module M5 (100% Suite) */}
       <div
         style={{
           position: 'absolute',
@@ -542,9 +600,95 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
           <Eraser size={14} />
           <span>Eraser</span>
         </button>
+
+        <span style={{ color: '#cbd5e1' }}>|</span>
+
+        {/* Part 5 Undo / Redo / Clear / Export Controls */}
+        <button
+          onClick={handleUndo}
+          disabled={historyIndex <= 0}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            padding: '6px 8px',
+            borderRadius: '4px',
+            border: '1px solid #cbd5e1',
+            backgroundColor: '#ffffff',
+            color: historyIndex <= 0 ? '#94a3b8' : '#0f172a',
+            fontSize: '12px',
+            fontWeight: 700,
+            cursor: historyIndex <= 0 ? 'not-allowed' : 'pointer'
+          }}
+          title="Undo Canvas Action (Part 5)"
+        >
+          <Undo2 size={14} />
+        </button>
+
+        <button
+          onClick={handleRedo}
+          disabled={historyIndex >= history.length - 1}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            padding: '6px 8px',
+            borderRadius: '4px',
+            border: '1px solid #cbd5e1',
+            backgroundColor: '#ffffff',
+            color: historyIndex >= history.length - 1 ? '#94a3b8' : '#0f172a',
+            fontSize: '12px',
+            fontWeight: 700,
+            cursor: historyIndex >= history.length - 1 ? 'not-allowed' : 'pointer'
+          }}
+          title="Redo Canvas Action (Part 5)"
+        >
+          <Redo2 size={14} />
+        </button>
+
+        <button
+          onClick={handleClearCanvas}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            padding: '6px 8px',
+            borderRadius: '4px',
+            border: '1px solid #fecaca',
+            backgroundColor: '#fef2f2',
+            color: '#dc2626',
+            fontSize: '12px',
+            fontWeight: 700,
+            cursor: 'pointer'
+          }}
+          title="Clear Entire Canvas (Part 5)"
+        >
+          <Trash2 size={14} />
+        </button>
+
+        <button
+          onClick={handleExportImage}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            padding: '6px 10px',
+            borderRadius: '4px',
+            border: '1px solid #bbf7d0',
+            backgroundColor: '#f0fdf4',
+            color: '#166534',
+            fontSize: '12px',
+            fontWeight: 700,
+            cursor: 'pointer'
+          }}
+          title="Export Canvas as High-Res PNG Image (Part 5)"
+        >
+          <Download size={14} />
+          <span>Export</span>
+        </button>
       </div>
 
-      {/* Floating Color Palette & Stroke Width Styling Controls — Part 4 (61% - 80%) */}
+      {/* Floating Color Palette & Stroke Width Styling Controls */}
       <div
         style={{
           position: 'absolute',
@@ -562,7 +706,6 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
           zIndex: 20
         }}
       >
-        {/* Color Swatch Picker */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <span style={{ fontSize: '11px', fontWeight: 700, color: '#64748b' }}>Color:</span>
           {COLOR_PRESETS.map((c) => (
@@ -586,7 +729,6 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
 
         <span style={{ color: '#cbd5e1' }}>|</span>
 
-        {/* Stroke Width Selector */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <span style={{ fontSize: '11px', fontWeight: 700, color: '#64748b' }}>Width:</span>
           {STROKE_WIDTH_OPTIONS.map((sw) => (
@@ -768,7 +910,7 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
         </Layer>
       </Stage>
 
-      {/* Engine Status & Viewport Zoom Diagnostics Overlay — Part 4 */}
+      {/* Engine Status & Viewport Zoom Diagnostics Overlay — Complete Module M5 */}
       <div
         style={{
           position: 'absolute',
@@ -791,8 +933,12 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
       >
         <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#2563eb', fontWeight: 700 }}>
           <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#22c55e' }} />
-          M5 Active: {activeTool.toUpperCase()}
+          M5 100% Engine Active: {activeTool.toUpperCase()}
         </span>
+        <span>|</span>
+        <span>Shapes: {shapes.length}</span>
+        <span>|</span>
+        <span>History: {historyIndex}/{history.length - 1}</span>
         <span>|</span>
         <span>Zoom: {Math.round(stageScale * 100)}%</span>
         <button
