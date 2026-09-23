@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Stage, Layer, Rect, Circle, Line, Text, Transformer, Group } from 'react-konva';
-import { MousePointer, Pencil, Minus, Square, Circle as CircleIcon, Type, Eraser, Hand, Undo2, Redo2, Trash2, Download } from 'lucide-react';
+import { MousePointer, Pencil, Minus, Square, Circle as CircleIcon, Type, Eraser, Hand, Undo2, Redo2, Trash2, Download, Keyboard, X, XCircle } from 'lucide-react';
 
 const COLOR_PRESETS = ['#0f172a', '#dc2626', '#2563eb', '#166534', '#d97706', '#9333ea'];
 const STROKE_WIDTH_OPTIONS = [
@@ -10,14 +10,15 @@ const STROKE_WIDTH_OPTIONS = [
 ];
 
 /**
- * KonvaCanvasBase Component — Module M5 (Part 5: 81% - 100% Final Complete M5 Konva.js Engine)
+ * KonvaCanvasBase Component — Complete Module M5 with Daily Productivity & Keyboard Shortcuts Refinements
  * 
- * Full 100% M5 Feature Suite:
+ * Features:
  * - Konva Stage & Layer baseline hierarchy (Part 1 - 20%)
  * - Tool State Management & Freehand / Line Drawing (Part 2 - 40%)
  * - Geometric Shapes, Text Nodes & Transformer Selection Handles (Part 3 - 60%)
  * - Color Palette Swatches, Stroke Width Selector & Stage Pan/Zoom (Part 4 - 80%)
  * - Undo/Redo History Stack, Canvas Clear & PNG Image Export Engine (Part 5 - 100%)
+ * - Keyboard Shortcuts Engine (V, H, P, L, R, C, T, E, Delete, Ctrl+Z, Ctrl+Y) & Productivity Help Overlay
  */
 export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStageRef }) => {
   const containerRef = useRef(null);
@@ -43,12 +44,13 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
   const [shapes, setShapes] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
 
-  // Part 5 (81% - 100%): Undo / Redo History Stack State
+  // Undo / Redo History Stack State
   const [history, setHistory] = useState([[]]);
   const [historyIndex, setHistoryIndex] = useState(0);
 
-  // Text Input Overlay State
+  // Text Input Overlay & Keyboard Shortcuts Modal State
   const [textInput, setTextInput] = useState({ visible: false, x: 0, y: 0, value: '' });
+  const [showShortcutsModal, setShowShortcutsModal] = useState(false);
 
   const currentShapeRef = useRef(null);
 
@@ -61,36 +63,45 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
     setHistoryIndex((prevIndex) => prevIndex + 1);
   }, [historyIndex]);
 
-  // Handle Undo Operation — Part 5
-  const handleUndo = () => {
+  // Handle Undo Operation
+  const handleUndo = useCallback(() => {
     if (historyIndex > 0) {
       const nextIndex = historyIndex - 1;
       setHistoryIndex(nextIndex);
       setShapes(history[nextIndex]);
       setSelectedId(null);
     }
-  };
+  }, [historyIndex, history]);
 
-  // Handle Redo Operation — Part 5
-  const handleRedo = () => {
+  // Handle Redo Operation
+  const handleRedo = useCallback(() => {
     if (historyIndex < history.length - 1) {
       const nextIndex = historyIndex + 1;
       setHistoryIndex(nextIndex);
       setShapes(history[nextIndex]);
       setSelectedId(null);
     }
-  };
+  }, [historyIndex, history]);
 
-  // Handle Clear Canvas Operation — Part 5
-  const handleClearCanvas = () => {
+  // Handle Clear Canvas Operation
+  const handleClearCanvas = useCallback(() => {
     if (shapes.length === 0) return;
     setShapes([]);
     setSelectedId(null);
     recordHistory([]);
-  };
+  }, [shapes, recordHistory]);
 
-  // Handle PNG Image Export Engine — Part 5
-  const handleExportImage = () => {
+  // Handle Selected Shape Contextual Delete
+  const handleDeleteSelectedShape = useCallback(() => {
+    if (!selectedId) return;
+    const updated = shapes.filter((s) => s.id !== selectedId);
+    setShapes(updated);
+    setSelectedId(null);
+    recordHistory(updated);
+  }, [selectedId, shapes, recordHistory]);
+
+  // Handle PNG Image Export Engine
+  const handleExportImage = useCallback(() => {
     const stage = stageRef.current;
     if (!stage) return;
     const dataURL = stage.toDataURL({ pixelRatio: 2 });
@@ -100,7 +111,76 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  };
+  }, [stageRef]);
+
+  // Global Keyboard Shortcuts Event Handler Engine
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Ignore shortcut keybinds when typing inside input boxes or textareas
+      if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
+
+      const key = e.key.toLowerCase();
+      const isCtrlOrCmd = e.ctrlKey || e.metaKey;
+
+      if (isCtrlOrCmd && key === 'z') {
+        e.preventDefault();
+        if (e.shiftKey) {
+          handleRedo();
+        } else {
+          handleUndo();
+        }
+        return;
+      }
+
+      if (isCtrlOrCmd && key === 'y') {
+        e.preventDefault();
+        handleRedo();
+        return;
+      }
+
+      if (key === 'delete' || key === 'backspace') {
+        if (selectedId) {
+          e.preventDefault();
+          handleDeleteSelectedShape();
+        }
+        return;
+      }
+
+      switch (key) {
+        case 'v':
+          setActiveTool('select');
+          setSelectedId(null);
+          break;
+        case 'h':
+          setActiveTool('hand');
+          setSelectedId(null);
+          break;
+        case 'p':
+          setActiveTool('pencil');
+          break;
+        case 'l':
+          setActiveTool('line');
+          break;
+        case 'r':
+          setActiveTool('rectangle');
+          break;
+        case 'c':
+          setActiveTool('circle');
+          break;
+        case 't':
+          setActiveTool('text');
+          break;
+        case 'e':
+          setActiveTool('eraser');
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedId, handleUndo, handleRedo, handleDeleteSelectedShape]);
 
   // Auto-resize Stage based on parent container bounds
   useEffect(() => {
@@ -413,7 +493,7 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
         userSelect: 'none'
       }}
     >
-      {/* Floating Main Toolbar — Complete Module M5 (100% Suite) */}
+      {/* Floating Main Toolbar */}
       <div
         style={{
           position: 'absolute',
@@ -446,7 +526,7 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
             fontWeight: 700,
             cursor: 'pointer'
           }}
-          title="Select / Transform Handles"
+          title="Select / Transform Handles (HotKey: V)"
         >
           <MousePointer size={14} />
           <span>Select</span>
@@ -467,7 +547,7 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
             fontWeight: 700,
             cursor: 'pointer'
           }}
-          title="Pan Stage Tool (Hand)"
+          title="Pan Stage Tool (HotKey: H)"
         >
           <Hand size={14} />
           <span>Pan</span>
@@ -490,7 +570,7 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
             fontWeight: 700,
             cursor: 'pointer'
           }}
-          title="Pencil Freehand Tool"
+          title="Pencil Freehand Tool (HotKey: P)"
         >
           <Pencil size={14} />
           <span>Pencil</span>
@@ -511,7 +591,7 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
             fontWeight: 700,
             cursor: 'pointer'
           }}
-          title="Straight Line Tool"
+          title="Straight Line Tool (HotKey: L)"
         >
           <Minus size={14} />
           <span>Line</span>
@@ -532,7 +612,7 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
             fontWeight: 700,
             cursor: 'pointer'
           }}
-          title="Rectangle Geometry Tool"
+          title="Rectangle Geometry Tool (HotKey: R)"
         >
           <Square size={14} />
           <span>Rectangle</span>
@@ -553,7 +633,7 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
             fontWeight: 700,
             cursor: 'pointer'
           }}
-          title="Circle Geometry Tool"
+          title="Circle Geometry Tool (HotKey: C)"
         >
           <CircleIcon size={14} />
           <span>Circle</span>
@@ -574,7 +654,7 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
             fontWeight: 700,
             cursor: 'pointer'
           }}
-          title="Text Node Tool"
+          title="Text Node Tool (HotKey: T)"
         >
           <Type size={14} />
           <span>Text</span>
@@ -595,7 +675,7 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
             fontWeight: 700,
             cursor: 'pointer'
           }}
-          title="Eraser Tool"
+          title="Eraser Tool (HotKey: E)"
         >
           <Eraser size={14} />
           <span>Eraser</span>
@@ -603,7 +683,7 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
 
         <span style={{ color: '#cbd5e1' }}>|</span>
 
-        {/* Part 5 Undo / Redo / Clear / Export Controls */}
+        {/* Undo / Redo / Clear / Export Controls */}
         <button
           onClick={handleUndo}
           disabled={historyIndex <= 0}
@@ -620,7 +700,7 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
             fontWeight: 700,
             cursor: historyIndex <= 0 ? 'not-allowed' : 'pointer'
           }}
-          title="Undo Canvas Action (Part 5)"
+          title="Undo Canvas Action (Ctrl+Z)"
         >
           <Undo2 size={14} />
         </button>
@@ -641,7 +721,7 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
             fontWeight: 700,
             cursor: historyIndex >= history.length - 1 ? 'not-allowed' : 'pointer'
           }}
-          title="Redo Canvas Action (Part 5)"
+          title="Redo Canvas Action (Ctrl+Y)"
         >
           <Redo2 size={14} />
         </button>
@@ -661,7 +741,7 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
             fontWeight: 700,
             cursor: 'pointer'
           }}
-          title="Clear Entire Canvas (Part 5)"
+          title="Clear Entire Canvas"
         >
           <Trash2 size={14} />
         </button>
@@ -681,10 +761,33 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
             fontWeight: 700,
             cursor: 'pointer'
           }}
-          title="Export Canvas as High-Res PNG Image (Part 5)"
+          title="Export Canvas as High-Res PNG Image"
         >
           <Download size={14} />
           <span>Export</span>
+        </button>
+
+        <span style={{ color: '#cbd5e1' }}>|</span>
+
+        {/* Keyboard Shortcuts Helper Modal Button */}
+        <button
+          onClick={() => setShowShortcutsModal(true)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            padding: '6px 8px',
+            borderRadius: '4px',
+            border: '1px solid #cbd5e1',
+            backgroundColor: '#f8fafc',
+            color: '#334155',
+            fontSize: '12px',
+            fontWeight: 700,
+            cursor: 'pointer'
+          }}
+          title="View Keyboard Shortcuts Legend"
+        >
+          <Keyboard size={14} />
         </button>
       </div>
 
@@ -750,7 +853,105 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
             </button>
           ))}
         </div>
+
+        {/* Selected Shape Contextual Delete Badge */}
+        {selectedId && (
+          <>
+            <span style={{ color: '#cbd5e1' }}>|</span>
+            <button
+              onClick={handleDeleteSelectedShape}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: '3px 8px',
+                borderRadius: '3px',
+                border: '1px solid #fecaca',
+                backgroundColor: '#fef2f2',
+                color: '#dc2626',
+                fontSize: '11px',
+                fontWeight: 700,
+                cursor: 'pointer'
+              }}
+              title="Delete Selected Shape (Hotkey: Delete)"
+            >
+              <XCircle size={12} />
+              <span>Delete Selection</span>
+            </button>
+          </>
+        )}
       </div>
+
+      {/* Keyboard Shortcuts Help Modal Overlay */}
+      {showShortcutsModal && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '0',
+            left: '0',
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'rgba(15, 23, 42, 0.4)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 50
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: '#ffffff',
+              border: '1px solid #cbd5e1',
+              borderRadius: '8px',
+              padding: '24px',
+              width: '90%',
+              maxWidth: '420px',
+              boxShadow: '0 10px 25px rgba(0,0,0,0.15)'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 800, color: '#0f172a', fontSize: '16px' }}>
+                <Keyboard size={18} />
+                <span>Canvas Keyboard Shortcuts</span>
+              </div>
+              <button
+                onClick={() => setShowShortcutsModal(false)}
+                style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px', color: '#334155' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span><kbd style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', border: '1px solid #cbd5e1', fontWeight: 700 }}>V</kbd> Select / Transform</span>
+                <span><kbd style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', border: '1px solid #cbd5e1', fontWeight: 700 }}>H</kbd> Pan Stage Tool</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span><kbd style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', border: '1px solid #cbd5e1', fontWeight: 700 }}>P</kbd> Freehand Pencil</span>
+                <span><kbd style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', border: '1px solid #cbd5e1', fontWeight: 700 }}>L</kbd> Straight Line</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span><kbd style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', border: '1px solid #cbd5e1', fontWeight: 700 }}>R</kbd> Rectangle Shape</span>
+                <span><kbd style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', border: '1px solid #cbd5e1', fontWeight: 700 }}>C</kbd> Circle Shape</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span><kbd style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', border: '1px solid #cbd5e1', fontWeight: 700 }}>T</kbd> Text Node Tool</span>
+                <span><kbd style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', border: '1px solid #cbd5e1', fontWeight: 700 }}>E</kbd> Eraser Tool</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #e2e8f0', paddingTop: '8px', marginTop: '4px' }}>
+                <span><kbd style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', border: '1px solid #cbd5e1', fontWeight: 700 }}>Ctrl+Z</kbd> Undo Action</span>
+                <span><kbd style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', border: '1px solid #cbd5e1', fontWeight: 700 }}>Ctrl+Y</kbd> Redo Action</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span><kbd style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', border: '1px solid #cbd5e1', fontWeight: 700 }}>Delete</kbd> Remove Selection</span>
+                <span><kbd style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', border: '1px solid #cbd5e1', fontWeight: 700 }}>Wheel</kbd> Focal Point Zoom</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* On-Canvas Interactive Text Entry Popup */}
       {textInput.visible && (
@@ -815,7 +1016,7 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
           <Group listening={false}>{renderGridDots()}</Group>
         </Layer>
 
-        {/* Layer 2: Main Interactive Geometric & Vector Content Layer */}
+        {/* Layer 2: Main Interactive Content Layer */}
         <Layer id="main-shapes-layer">
           {shapes.map((s) => {
             if (s.type === 'pencil' || s.type === 'line') {
@@ -910,7 +1111,7 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
         </Layer>
       </Stage>
 
-      {/* Engine Status & Viewport Zoom Diagnostics Overlay — Complete Module M5 */}
+      {/* Engine Status & Viewport Diagnostics Overlay */}
       <div
         style={{
           position: 'absolute',
@@ -933,12 +1134,10 @@ export const KonvaCanvasBase = ({ children, onStageClick, stageRef: externalStag
       >
         <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#2563eb', fontWeight: 700 }}>
           <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#22c55e' }} />
-          M5 100% Engine Active: {activeTool.toUpperCase()}
+          M5 Active: {activeTool.toUpperCase()}
         </span>
         <span>|</span>
         <span>Shapes: {shapes.length}</span>
-        <span>|</span>
-        <span>History: {historyIndex}/{history.length - 1}</span>
         <span>|</span>
         <span>Zoom: {Math.round(stageScale * 100)}%</span>
         <button

@@ -12,16 +12,27 @@ This repository contains **Module M5 (Konva.js Integration + Canvas Base Setup)*
 | **Part 2** | **40%** | **Vector Tool State & Freehand / Line Drawing (21% - 40%)**<br>Active tool selection state management (`select`, `pencil`, `line`, `eraser`), mouse down/move/up event listeners, real-time freehand pencil path rendering, straight line drawing engine, and vector tool switcher bar. | **Completed & Pushed ✅** |
 | **Part 3** | **60%** | **Geometric Shapes & Interactive Text Renderer (41% - 60%)**<br>Rectangle and circle/ellipse geometry renderers, text insertion node controls, and Konva Transformer resize & rotate selection handles. | **Completed & Pushed ✅** |
 | **Part 4** | **80%** | **Color Palette, Stroke Styling & Stage Pan/Zoom (61% - 80%)**<br>Interactive color swatch picker, stroke width selector controls (`Thin`, `Medium`, `Thick`), Stage Pan hand drag navigation tool, mouse wheel focal point zoom engine, and zoom reset control. | **Completed & Pushed ✅** |
-| **Part 5** | **100%** | **History Stack, Export Engine & Final Integration (81% - 100%)**<br>Undo/redo state stack history (`handleUndo`, `handleRedo`), canvas clear (`handleClearCanvas`), high-res PNG image export (`handleExportImage`), and full 100% M5 engine verification. | **Completed & Pushed ✅** |
+| **Part 5** | **100%** | **History Stack, Export Engine & Final Integration (81% - 100%)**<br>Undo/redo state stack history (`handleUndo`, `handleRedo`), canvas clear (`handleClearCanvas`), high-resolution PNG image export engine (`handleExportImage`), and full 100% M5 engine verification. | **Completed & Pushed ✅** |
 
 ---
 
-## ⚡ Part 5 (81% - 100% Code) Deliverable Summary
+## ⚡ Daily Progress & Refinement Updates
 
-- Implemented **Undo & Redo History State Stack** (`recordHistory`, `handleUndo`, `handleRedo`).
-- Added **Canvas Clear Engine** (`handleClearCanvas`) resetting active shapes & Transformer selection.
-- Added **High-Resolution PNG Image Export Engine** (`handleExportImage`) utilizing Konva's `stage.toDataURL()`.
-- Finalized full 100% floating toolbar suite containing all vector tools, color presets, stroke width selectors, pan/zoom controls, history buttons, and export engine.
+### 📅 **Daily Update — Keyboard Shortcuts & Productivity Engine**
+- Integrated **Global Keyboard Shortcuts System**:
+  - `V` / `v` -> Select / Transform Tool
+  - `H` / `h` -> Hand Pan Stage Tool
+  - `P` / `p` -> Freehand Pencil Tool
+  - `L` / `l` -> Straight Line Tool
+  - `R` / `r` -> Rectangle Shape Tool
+  - `C` / `c` -> Circle Shape Tool
+  - `T` / `t` -> Text Node Tool
+  - `E` / `e` -> Eraser Tool
+  - `Ctrl+Z` / `Cmd+Z` -> Undo Canvas Action
+  - `Ctrl+Y` / `Cmd+Y` -> Redo Canvas Action
+  - `Delete` / `Backspace` -> Remove Selected Shape Node
+- Added **Keyboard Shortcuts Helper Modal & Overlay Badge** (`Keyboard` icon).
+- Added **Contextual Selected Shape Delete Button** (`Delete Selection` badge).
 
 ---
 
