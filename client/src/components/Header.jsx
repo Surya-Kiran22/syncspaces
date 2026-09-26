@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useSocket } from '../context/SocketContext';
-import { Users, Copy, Check, LogOut, History, Radio } from 'lucide-react';
+import { Users, Copy, Check, LogOut, History, Radio, RotateCcw } from 'lucide-react';
 import { ReplayBar } from './Replay/ReplayBar';
+import { DocumentRestoreModal } from './DocumentRestore/DocumentRestoreModal';
 
 export const Header = () => {
   const { currentRoom, currentUser, roomUsers, leaveRoom, isConnected } = useSocket();
   const [copied, setCopied] = useState(false);
   const [showReplay, setShowReplay] = useState(false);
+  const [showDocumentRestore, setShowDocumentRestore] = useState(false);
 
   const handleCopyRoomId = () => {
     if (currentRoom) {
@@ -43,7 +45,7 @@ export const Header = () => {
               marginTop: '2px',
               fontWeight: '500'
             }}>
-              CQRS Architecture • Yjs CRDT Synchronization • Monaco Editor & Whiteboard Canvas
+              CQRS Architecture • Yjs CRDT Synchronization • Document Restore Engine (M3)
             </p>
           </div>
 
@@ -98,107 +100,96 @@ export const Header = () => {
                     color: copied ? '#166534' : '#334155',
                     cursor: 'pointer',
                     padding: '3px 6px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px',
                     fontSize: '11px',
-                    fontWeight: '600'
+                    fontWeight: '700'
                   }}
                 >
-                  {copied ? <Check size={12} /> : <Copy size={12} />}
-                  {copied ? 'Copied' : 'Copy'}
+                  {copied ? 'Copied!' : 'Copy'}
                 </button>
               </div>
             )}
 
-            {/* Replay History Button */}
+            {/* Document Restore Button (Week 3 M3 Day 1) */}
+            <button
+              onClick={() => setShowDocumentRestore(true)}
+              style={{
+                backgroundColor: '#f0fdf4',
+                color: '#166534',
+                border: '1px solid #bbf7d0',
+                padding: '6px 12px',
+                borderRadius: '4px',
+                fontSize: '12px',
+                fontWeight: '700',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+              title="Open Document Restore Engine (M3 Day 1)"
+            >
+              <RotateCcw size={14} />
+              <span>Restore Document</span>
+            </button>
+
+            {/* Replay History Scrubber Toggle */}
             {currentRoom && (
               <button
                 onClick={() => setShowReplay(!showReplay)}
                 style={{
-                  backgroundColor: showReplay ? '#1e5617' : '#166534',
-                  color: '#ffffff',
-                  border: '1px solid #14532d',
+                  backgroundColor: showReplay ? '#eff6ff' : '#ffffff',
+                  color: showReplay ? '#1d4ed8' : '#334155',
+                  border: `1px solid ${showReplay ? '#93c5fd' : '#cbd5e1'}`,
                   padding: '6px 12px',
                   borderRadius: '4px',
-                  fontSize: '13px',
-                  fontWeight: '600',
+                  fontSize: '12px',
+                  fontWeight: '700',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '6px',
-                  boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                  gap: '6px'
                 }}
               >
                 <History size={14} />
-                <span>Replay History</span>
+                <span>Time-Machine</span>
               </button>
             )}
 
-            {/* User Avatars & Leave Button */}
+            {/* Leave Room Action Button */}
             {currentRoom && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginLeft: '4px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <Users size={15} style={{ color: '#64748b' }} />
-                  <div style={{ display: 'flex', alignItems: 'center' }}>
-                    {roomUsers.map((user, idx) => (
-                      <div
-                        key={user.socketId || idx}
-                        title={`${user.username} ${user.socketId === currentUser?.socketId ? '(You)' : ''}`}
-                        style={{
-                          width: '26px',
-                          height: '26px',
-                          borderRadius: '50%',
-                          backgroundColor: user.color || '#2563eb',
-                          color: '#ffffff',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '11px',
-                          fontWeight: 'bold',
-                          border: '2px solid #ffffff',
-                          marginLeft: idx === 0 ? 0 : '-8px',
-                          boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
-                        }}
-                      >
-                        {user.username.charAt(0).toUpperCase()}
-                      </div>
-                    ))}
-                  </div>
-                  <span style={{ fontSize: '12px', color: '#475569', fontWeight: '600', marginLeft: '4px' }}>
-                    ({roomUsers.length})
-                  </span>
-                </div>
-
-                <button
-                  onClick={leaveRoom}
-                  style={{
-                    backgroundColor: '#ffffff',
-                    border: '1px solid #fecaca',
-                    color: '#dc2626',
-                    padding: '5px 10px',
-                    borderRadius: '4px',
-                    fontSize: '12px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px'
-                  }}
-                >
-                  <LogOut size={13} />
-                  Leave
-                </button>
-              </div>
+              <button
+                onClick={leaveRoom}
+                style={{
+                  backgroundColor: '#ffffff',
+                  color: '#dc2626',
+                  border: '1px solid #fecaca',
+                  padding: '6px 12px',
+                  borderRadius: '4px',
+                  fontSize: '12px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <LogOut size={14} />
+                <span>Leave</span>
+              </button>
             )}
           </div>
         </div>
-
-        {/* Horizontal Line under Header */}
-        <hr style={{ border: 'none', borderBottom: '1px solid #cbd5e1', marginTop: '12px' }} />
       </header>
 
+      {/* Render Replay Bar Component */}
       <ReplayBar isOpen={showReplay} onClose={() => setShowReplay(false)} />
+
+      {/* Render Document Restore Modal (Week 3 M3 Day 1) */}
+      <DocumentRestoreModal
+        isOpen={showDocumentRestore}
+        onClose={() => setShowDocumentRestore(false)}
+        currentShapes={[]}
+        currentCode=""
+      />
     </>
   );
 };

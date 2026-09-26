@@ -1,38 +1,26 @@
-# 🎨 Module M5: Konva.js Integration & Canvas Base Setup
+# 🎨 Module M3: Document Restore Engine (Week 3)
 
-This repository contains **Module M5 (Konva.js Integration + Canvas Base Setup)** for the SyncSpace collaborative workspace platform.
+This repository contains **Module M3 (Document Restore Engine)** for the SyncSpace collaborative workspace platform.
 
 ---
 
-## 🛠️ 5-Part Progressive Development Roadmap for Module M5
+## 🛠️ 5-Day Progressive Development Roadmap for Week 3 — Module M3
 
-| Part | Progress | Module Focus & Deliverables | Status |
+| Day | Progress | Module Focus & Deliverables | Status |
 | :---: | :---: | :--- | :---: |
-| **Part 1** | **20%** | **Konva.js Base Setup & Stage Container (0% - 20%)**<br>Integration of `react-konva` (`Stage`, `Layer`, `Rect`, `Circle`), dynamic responsive viewport auto-resizing via `ResizeObserver`, infinite canvas dot-matrix background pattern grid renderer, and viewport status diagnostics. | **Completed & Pushed ✅** |
-| **Part 2** | **40%** | **Vector Tool State & Freehand / Line Drawing (21% - 40%)**<br>Active tool selection state management (`select`, `pencil`, `line`, `eraser`), mouse down/move/up event listeners, real-time freehand pencil path rendering, straight line drawing engine, and vector tool switcher bar. | **Completed & Pushed ✅** |
-| **Part 3** | **60%** | **Geometric Shapes & Interactive Text Renderer (41% - 60%)**<br>Rectangle and circle/ellipse geometry renderers, text insertion node controls, and Konva Transformer resize & rotate selection handles. | **Completed & Pushed ✅** |
-| **Part 4** | **80%** | **Color Palette, Stroke Styling & Stage Pan/Zoom (61% - 80%)**<br>Interactive color swatch picker, stroke width selector controls (`Thin`, `Medium`, `Thick`), Stage Pan hand drag navigation tool, mouse wheel focal point zoom engine, and zoom reset control. | **Completed & Pushed ✅** |
-| **Part 5** | **100%** | **History Stack, Export Engine & Final Integration (81% - 100%)**<br>Undo/redo state stack history (`handleUndo`, `handleRedo`), canvas clear (`handleClearCanvas`), high-resolution PNG image export engine (`handleExportImage`), and full 100% M5 engine verification. | **Completed & Pushed ✅** |
+| **Day 1** | **20%** | **Document Snapshot State Schema & Restore Service Scaffolding**<br>Document snapshot data model & restore state types (`documentRestoreService.js`), serialization (`serializeDocumentState`), snapshot parser & validator (`parseSnapshotData`), repository store, and `DocumentRestoreModal` dialog UI component. | **Completed & Pushed ✅** |
+| **Day 2** | **40%** | **Snapshot History Version List & Metadata Indexing (21% - 40%)**<br>Storing versioned document snapshots with timestamp, version index (`v1`, `v2`, `v3`), shape count, and code buffer state with Document Restore History Drawer UI. | *Upcoming* |
+| **Day 3** | **60%** | **Interactive Document State Diff & Version Preview (41% - 60%)**<br>Side-by-side or preview window comparing current active document state against selected historical restore point. | *Upcoming* |
+| **Day 4** | **80%** | **Atomic Document State Rollback & CRDT Re-hydration (61% - 80%)**<br>Executing atomic document state restoration into Yjs document & Konva canvas stage (`restoreDocumentToState`). | *Upcoming* |
+| **Day 5** | **100%** | **Auto-Backup Trigger, Conflict Protection & Final M3 Verification (81% - 100%)**<br>Safety backup snapshot generation before restoring, error handling, and 100% verification of Document Restore Engine. | *Upcoming* |
 
 ---
 
-## ⚡ Daily Progress & Refinement Updates
+## ⚡ Day 1 (20% Code) Deliverable Summary
 
-### 📅 **Daily Update — Keyboard Shortcuts & Productivity Engine**
-- Integrated **Global Keyboard Shortcuts System**:
-  - `V` / `v` -> Select / Transform Tool
-  - `H` / `h` -> Hand Pan Stage Tool
-  - `P` / `p` -> Freehand Pencil Tool
-  - `L` / `l` -> Straight Line Tool
-  - `R` / `r` -> Rectangle Shape Tool
-  - `C` / `c` -> Circle Shape Tool
-  - `T` / `t` -> Text Node Tool
-  - `E` / `e` -> Eraser Tool
-  - `Ctrl+Z` / `Cmd+Z` -> Undo Canvas Action
-  - `Ctrl+Y` / `Cmd+Y` -> Redo Canvas Action
-  - `Delete` / `Backspace` -> Remove Selected Shape Node
-- Added **Keyboard Shortcuts Helper Modal & Overlay Badge** (`Keyboard` icon).
-- Added **Contextual Selected Shape Delete Button** (`Delete Selection` badge).
+- Created `client/src/services/documentRestoreService.js` implementing snapshot serialization (`serializeDocumentState`), parsing (`parseSnapshotData`), schema validation (`validateSnapshotVersion`), and restore repository.
+- Created `client/src/components/DocumentRestore/DocumentRestoreModal.jsx` dialog component allowing users to inspect snapshot metadata and trigger document restoration.
+- Integrated `Restore Document` action button and modal into `client/src/components/Header.jsx`.
 
 ---
 
