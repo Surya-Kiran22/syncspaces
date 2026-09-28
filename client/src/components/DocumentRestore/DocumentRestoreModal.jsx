@@ -1,31 +1,33 @@
 import React, { useState } from 'react';
-import { RotateCcw, FileCheck, Upload, AlertCircle, CheckCircle2, X } from 'lucide-react';
+import { RotateCcw, FileCheck, Upload, AlertCircle, CheckCircle2, X, History } from 'lucide-react';
 import { serializeDocumentState, parseSnapshotData, restoreRepository } from '../../services/documentRestoreService';
+import { DocumentRestoreHistoryList } from './DocumentRestoreHistoryList';
 
 /**
- * DocumentRestoreModal Component — Module M3 (Week 3 — Day 1: 20% Baseline Architecture)
+ * DocumentRestoreModal Component — Module M3 (Week 3 — Day 2: 21% - 40% Version Indexing & History List)
  * 
- * Provides an interactive UI dialog to create, inspect, and trigger Document Restore points.
+ * Provides an interactive UI dialog to create, inspect, list history versions, and trigger Document Restore points.
  */
 export const DocumentRestoreModal = ({ isOpen, onClose, currentShapes = [], currentCode = '', onRestoreConfirmed }) => {
   const [jsonInput, setJsonInput] = useState('');
   const [statusMessage, setStatusMessage] = useState(null);
-  const [activeTab, setActiveTab] = useState('create'); // 'create' | 'import'
+  const [activeTab, setActiveTab] = useState('history'); // 'history' | 'create' | 'import'
 
   if (!isOpen) return null;
 
-  // Day 1: Create New Document Snapshot
+  // Day 1 & Day 2: Create New Document Snapshot
   const handleCreateSnapshot = () => {
     const snapshot = serializeDocumentState({
       roomId: 'CURRENT_ROOM',
       shapes: currentShapes,
       code: currentCode
     });
-    restoreRepository.saveSnapshot(snapshot);
-    setStatusMessage({ type: 'success', text: `Created Snapshot ${snapshot.versionId} with ${snapshot.shapesCount} shapes!` });
+    const saved = restoreRepository.saveSnapshot(snapshot);
+    setStatusMessage({ type: 'success', text: `Created Restore Point ${saved.versionTag} (${saved.versionId})!` });
+    setActiveTab('history');
   };
 
-  // Day 1: Import & Restore Document Snapshot
+  // Day 1 & Day 2: Import & Restore Document Snapshot
   const handleImportAndRestore = (e) => {
     e.preventDefault();
     if (!jsonInput.trim()) {
@@ -35,15 +37,24 @@ export const DocumentRestoreModal = ({ isOpen, onClose, currentShapes = [], curr
 
     const res = parseSnapshotData(jsonInput.trim());
     if (res.success) {
-      restoreRepository.saveSnapshot(res.snapshot);
+      const saved = restoreRepository.saveSnapshot(res.snapshot);
       if (onRestoreConfirmed) {
-        onRestoreConfirmed(res.snapshot);
+        onRestoreConfirmed(saved || res.snapshot);
       }
-      setStatusMessage({ type: 'success', text: `Document restored successfully from version ${res.snapshot.versionId}!` });
+      setStatusMessage({ type: 'success', text: `Document restored successfully from version ${saved ? saved.versionTag : res.snapshot.versionId}!` });
       setJsonInput('');
+      setActiveTab('history');
     } else {
       setStatusMessage({ type: 'error', text: res.error });
     }
+  };
+
+  // Select Snapshot from History List — Day 2
+  const handleSelectHistorySnapshot = (snap) => {
+    if (onRestoreConfirmed) {
+      onRestoreConfirmed(snap);
+    }
+    setStatusMessage({ type: 'success', text: `Restored Document to checkpoint ${snap.versionTag} (${snap.formattedTime})` });
   };
 
   const storedSnapshots = restoreRepository.getSnapshots();
@@ -67,7 +78,7 @@ export const DocumentRestoreModal = ({ isOpen, onClose, currentShapes = [], curr
       <div
         style={{
           width: '90%',
-          maxWidth: '520px',
+          maxWidth: '540px',
           backgroundColor: '#ffffff',
           border: '1px solid #cbd5e1',
           borderRadius: '8px',
@@ -79,7 +90,7 @@ export const DocumentRestoreModal = ({ isOpen, onClose, currentShapes = [], curr
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', borderBottom: '1px solid #e2e8f0', paddingBottom: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 800, color: '#0f172a', fontSize: '18px' }}>
             <RotateCcw size={20} style={{ color: '#166534' }} />
-            <span>Document Restore Engine (M3 Day 1)</span>
+            <span>Document Restore Engine (M3 Day 2)</span>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer' }}>
             <X size={18} />
@@ -108,44 +119,81 @@ export const DocumentRestoreModal = ({ isOpen, onClose, currentShapes = [], curr
           </div>
         )}
 
-        {/* Tab Buttons */}
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+        {/* Tab Navigation Buttons — Day 2 */}
+        <div style={{ display: 'flex', gap: '6px', marginBottom: '16px' }}>
+          <button
+            onClick={() => { setActiveTab('history'); setStatusMessage(null); }}
+            style={{
+              flex: 1,
+              padding: '8px 12px',
+              fontSize: '12px',
+              fontWeight: 700,
+              borderRadius: '4px',
+              border: '1px solid #cbd5e1',
+              backgroundColor: activeTab === 'history' ? '#166534' : '#ffffff',
+              color: activeTab === 'history' ? '#ffffff' : '#334155',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px'
+            }}
+          >
+            <History size={14} />
+            <span>Version History ({storedSnapshots.length})</span>
+          </button>
+
           <button
             onClick={() => { setActiveTab('create'); setStatusMessage(null); }}
             style={{
               flex: 1,
-              padding: '8px',
-              fontSize: '13px',
+              padding: '8px 12px',
+              fontSize: '12px',
               fontWeight: 700,
               borderRadius: '4px',
               border: '1px solid #cbd5e1',
               backgroundColor: activeTab === 'create' ? '#166534' : '#ffffff',
               color: activeTab === 'create' ? '#ffffff' : '#334155',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px'
             }}
           >
-            Create Backup Point
+            <FileCheck size={14} />
+            <span>Create Backup</span>
           </button>
 
           <button
             onClick={() => { setActiveTab('import'); setStatusMessage(null); }}
             style={{
               flex: 1,
-              padding: '8px',
-              fontSize: '13px',
+              padding: '8px 12px',
+              fontSize: '12px',
               fontWeight: 700,
               borderRadius: '4px',
               border: '1px solid #cbd5e1',
               backgroundColor: activeTab === 'import' ? '#166534' : '#ffffff',
               color: activeTab === 'import' ? '#ffffff' : '#334155',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px'
             }}
           >
-            Restore From JSON
+            <Upload size={14} />
+            <span>Import JSON</span>
           </button>
         </div>
 
-        {/* Tab 1: Create Backup Point */}
+        {/* Tab 1: History Version List — Day 2 */}
+        {activeTab === 'history' && (
+          <DocumentRestoreHistoryList onSelectSnapshot={handleSelectHistorySnapshot} />
+        )}
+
+        {/* Tab 2: Create Backup Point */}
         {activeTab === 'create' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '14px', fontSize: '13px', color: '#334155' }}>
@@ -172,12 +220,12 @@ export const DocumentRestoreModal = ({ isOpen, onClose, currentShapes = [], curr
               }}
             >
               <FileCheck size={16} />
-              <span>Generate Restore Snapshot (Day 1)</span>
+              <span>Generate Restore Checkpoint (Day 2)</span>
             </button>
           </div>
         )}
 
-        {/* Tab 2: Import & Restore JSON */}
+        {/* Tab 3: Import & Restore JSON */}
         {activeTab === 'import' && (
           <form onSubmit={handleImportAndRestore} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <textarea
@@ -221,8 +269,8 @@ export const DocumentRestoreModal = ({ isOpen, onClose, currentShapes = [], curr
 
         {/* Stored Snapshots Counter Footer */}
         <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid #e2e8f0', fontSize: '12px', color: '#64748b', display: 'flex', justifyContent: 'space-between' }}>
-          <span>Day 1 Repository Store: <strong>{storedSnapshots.length} version(s)</strong></span>
-          <span>Week 3 M3 Baseline</span>
+          <span>Day 2 Version Store: <strong>{storedSnapshots.length} version(s) indexed</strong></span>
+          <span>Week 3 M3 History Indexing</span>
         </div>
       </div>
     </div>
