@@ -1,8 +1,8 @@
 /**
- * Document Restore Service — Module M3 (Week 3 — Day 3: 41% - 60% State Diff & Version Preview Engine)
+ * Document Restore Service — Module M3 (Week 3 — Day 4: 61% - 80% Atomic State Rollback Engine)
  * 
  * Provides core serialization, snapshot parsing, version validation, chronological indexing,
- * state diff calculation, and versioned history utilities for the SyncSpace document restore engine.
+ * state diff calculation, atomic state rollback, and versioned history utilities for SyncSpace.
  */
 
 // Validate Document Snapshot Structure
@@ -47,7 +47,7 @@ export const parseSnapshotData = (rawData) => {
   }
 };
 
-// Compute Document State Diff — Day 3 Engine
+// Compute Document State Diff
 export const computeDocumentDiff = (currentState = { shapes: [], code: '' }, targetSnapshot) => {
   if (!targetSnapshot) {
     return { hasChanges: false, summary: 'No target snapshot selected' };
@@ -84,6 +84,41 @@ export const computeDocumentDiff = (currentState = { shapes: [], code: '' }, tar
     shapesSummary,
     codeSummary,
     summary: `${shapesSummary} • ${codeSummary}`
+  };
+};
+
+// Atomic Document State Rollback & CRDT Re-hydration Engine — Day 4
+export const restoreDocumentToState = (targetSnapshot, currentState = { shapes: [], code: '' }) => {
+  if (!validateSnapshotVersion(targetSnapshot)) {
+    return { success: false, error: 'Target snapshot is invalid or corrupted' };
+  }
+
+  // 1. Generate automatic pre-rollback safety snapshot
+  const safetyBackup = serializeDocumentState({
+    roomId: targetSnapshot.roomId,
+    shapes: currentState.shapes || [],
+    code: currentState.code || '',
+    label: `Pre-Rollback Safety Backup (${targetSnapshot.versionTag || targetSnapshot.versionId})`
+  });
+  restoreRepository.saveSnapshot(safetyBackup);
+
+  // 2. Perform atomic re-hydration payload preparation
+  const restoredShapes = Array.isArray(targetSnapshot.shapes) ? [...targetSnapshot.shapes] : [];
+  const restoredCode = targetSnapshot.code || '';
+  const restoredLanguage = targetSnapshot.language || 'javascript';
+
+  return {
+    success: true,
+    versionTag: targetSnapshot.versionTag || 'Restored',
+    versionId: targetSnapshot.versionId,
+    shapes: restoredShapes,
+    code: restoredCode,
+    language: restoredLanguage,
+    shapesCount: restoredShapes.length,
+    codeLength: restoredCode.length,
+    safetyBackupVersionId: safetyBackup.versionId,
+    timestamp: new Date().toLocaleTimeString(),
+    message: `Atomic rollback to version ${targetSnapshot.versionTag || targetSnapshot.versionId} completed cleanly!`
   };
 };
 
