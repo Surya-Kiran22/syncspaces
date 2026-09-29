@@ -1,8 +1,8 @@
 /**
- * Document Restore Service — Module M3 (Week 3 — Day 2: 21% - 40% Version Indexing & History Storage)
+ * Document Restore Service — Module M3 (Week 3 — Day 3: 41% - 60% State Diff & Version Preview Engine)
  * 
  * Provides core serialization, snapshot parsing, version validation, chronological indexing,
- * and versioned history utilities for the SyncSpace collaborative document restore engine.
+ * state diff calculation, and versioned history utilities for the SyncSpace document restore engine.
  */
 
 // Validate Document Snapshot Structure
@@ -47,7 +47,47 @@ export const parseSnapshotData = (rawData) => {
   }
 };
 
-// Versioned Restore Snapshot Repository Store — Day 2
+// Compute Document State Diff — Day 3 Engine
+export const computeDocumentDiff = (currentState = { shapes: [], code: '' }, targetSnapshot) => {
+  if (!targetSnapshot) {
+    return { hasChanges: false, summary: 'No target snapshot selected' };
+  }
+
+  const currentShapesCount = currentState.shapes ? currentState.shapes.length : 0;
+  const targetShapesCount = targetSnapshot.shapes ? targetSnapshot.shapes.length : 0;
+  const shapesDelta = targetShapesCount - currentShapesCount;
+
+  const currentCodeLength = currentState.code ? currentState.code.length : 0;
+  const targetCodeLength = targetSnapshot.code ? targetSnapshot.code.length : 0;
+  const codeDelta = targetCodeLength - currentCodeLength;
+
+  const shapesSummary = shapesDelta === 0 
+    ? 'Canvas shapes count unchanged' 
+    : shapesDelta > 0 
+      ? `Adds ${shapesDelta} canvas shape(s)` 
+      : `Removes ${Math.abs(shapesDelta)} canvas shape(s)`;
+
+  const codeSummary = codeDelta === 0 
+    ? 'Code length unchanged' 
+    : codeDelta > 0 
+      ? `Adds +${codeDelta} code chars` 
+      : `Removes -${Math.abs(codeDelta)} code chars`;
+
+  return {
+    hasChanges: shapesDelta !== 0 || codeDelta !== 0,
+    currentShapesCount,
+    targetShapesCount,
+    shapesDelta,
+    currentCodeLength,
+    targetCodeLength,
+    codeDelta,
+    shapesSummary,
+    codeSummary,
+    summary: `${shapesSummary} • ${codeSummary}`
+  };
+};
+
+// Versioned Restore Snapshot Repository Store
 class DocumentRestoreRepository {
   constructor() {
     this.snapshots = [];
@@ -55,7 +95,6 @@ class DocumentRestoreRepository {
     this.initDefaultHistory();
   }
 
-  // Pre-populate demo historical checkpoints for Day 2 inspection
   initDefaultHistory() {
     if (this.snapshots.length === 0) {
       const snap1 = serializeDocumentState({
