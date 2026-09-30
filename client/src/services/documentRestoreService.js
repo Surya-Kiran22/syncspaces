@@ -1,8 +1,9 @@
 /**
- * Document Restore Service — Module M3 (Week 3 — Day 4: 61% - 80% Atomic State Rollback Engine)
+ * Document Restore Service — Module M3 (Week 3 — Day 5: 81% - 100% Complete Document Restore Engine)
  * 
  * Provides core serialization, snapshot parsing, version validation, chronological indexing,
- * state diff calculation, atomic state rollback, and versioned history utilities for SyncSpace.
+ * state diff calculation, atomic state rollback, auto-backup trigger, export/import file helpers,
+ * and versioned history utilities for SyncSpace.
  */
 
 // Validate Document Snapshot Structure
@@ -11,6 +12,17 @@ export const validateSnapshotVersion = (snapshot) => {
   if (!snapshot.versionId || typeof snapshot.versionId !== 'string') return false;
   if (!Array.isArray(snapshot.shapes)) return false;
   return true;
+};
+
+// Verify Snapshot Integrity & Integrity Guard — Day 5
+export const verifySnapshotIntegrity = (snapshot) => {
+  if (!validateSnapshotVersion(snapshot)) {
+    return { valid: false, reason: 'Missing required snapshot metadata properties' };
+  }
+  if (typeof snapshot.code !== 'string') {
+    return { valid: false, reason: 'Invalid code buffer format' };
+  }
+  return { valid: true, reason: 'Snapshot integrity verified 100%' };
 };
 
 // Serialize Current Document Workspace State into a Versioned Restore Snapshot
@@ -38,13 +50,26 @@ export const serializeDocumentState = ({ roomId, shapes = [], code = '', languag
 export const parseSnapshotData = (rawData) => {
   try {
     const parsed = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
-    if (validateSnapshotVersion(parsed)) {
+    const check = verifySnapshotIntegrity(parsed);
+    if (check.valid) {
       return { success: true, snapshot: parsed };
     }
-    return { success: false, error: 'Invalid document snapshot schema format' };
+    return { success: false, error: check.reason };
   } catch (err) {
     return { success: false, error: `JSON Parse Failure: ${err.message}` };
   }
+};
+
+// Export Snapshot Object to JSON File Download — Day 5
+export const exportSnapshotToFile = (snapshot) => {
+  if (!snapshot) return;
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(snapshot, null, 2));
+  const downloadAnchor = document.createElement('a');
+  downloadAnchor.setAttribute("href", dataStr);
+  downloadAnchor.setAttribute("download", `syncspace-snapshot-${snapshot.versionTag || 'backup'}-${Date.now()}.json`);
+  document.body.appendChild(downloadAnchor);
+  downloadAnchor.click();
+  downloadAnchor.remove();
 };
 
 // Compute Document State Diff
@@ -87,13 +112,14 @@ export const computeDocumentDiff = (currentState = { shapes: [], code: '' }, tar
   };
 };
 
-// Atomic Document State Rollback & CRDT Re-hydration Engine — Day 4
+// Atomic Document State Rollback Engine
 export const restoreDocumentToState = (targetSnapshot, currentState = { shapes: [], code: '' }) => {
-  if (!validateSnapshotVersion(targetSnapshot)) {
-    return { success: false, error: 'Target snapshot is invalid or corrupted' };
+  const integrity = verifySnapshotIntegrity(targetSnapshot);
+  if (!integrity.valid) {
+    return { success: false, error: integrity.reason };
   }
 
-  // 1. Generate automatic pre-rollback safety snapshot
+  // 1. Generate automatic pre-rollback safety backup snapshot
   const safetyBackup = serializeDocumentState({
     roomId: targetSnapshot.roomId,
     shapes: currentState.shapes || [],

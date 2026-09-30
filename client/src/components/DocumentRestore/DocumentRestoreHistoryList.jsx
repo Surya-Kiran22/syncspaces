@@ -1,11 +1,11 @@
 import React from 'react';
-import { History, Layers, Code, Clock, ArrowRight } from 'lucide-react';
-import { restoreRepository } from '../../services/documentRestoreService';
+import { History, Layers, Code, Clock, ArrowRight, Download } from 'lucide-react';
+import { restoreRepository, exportSnapshotToFile } from '../../services/documentRestoreService';
 
 /**
- * DocumentRestoreHistoryList Component — Module M3 (Week 3 — Day 2: 21% - 40% History List & Version Indexing)
+ * DocumentRestoreHistoryList Component — Module M3 (Week 3 — Day 5: 81% - 100% History List & File Export)
  * 
- * Displays an interactive chronological list of versioned restore snapshots with metadata badges.
+ * Displays an interactive chronological list of versioned restore snapshots with metadata badges & export download.
  */
 export const DocumentRestoreHistoryList = ({ onSelectSnapshot }) => {
   const snapshots = restoreRepository.getSnapshots();
@@ -75,28 +75,50 @@ export const DocumentRestoreHistoryList = ({ onSelectSnapshot }) => {
             </div>
           </div>
 
-          {/* Right Select Action Button */}
-          <button
-            onClick={() => onSelectSnapshot && onSelectSnapshot(snap)}
-            style={{
-              backgroundColor: '#166534',
-              color: '#ffffff',
-              border: '1px solid #14532d',
-              borderRadius: '4px',
-              padding: '6px 12px',
-              fontSize: '12px',
-              fontWeight: 700,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              whiteSpace: 'nowrap'
-            }}
-            title="Restore this document version"
-          >
-            <span>Restore</span>
-            <ArrowRight size={13} />
-          </button>
+          {/* Right Action Buttons */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <button
+              onClick={() => exportSnapshotToFile(snap)}
+              style={{
+                backgroundColor: '#ffffff',
+                color: '#334155',
+                border: '1px solid #cbd5e1',
+                borderRadius: '4px',
+                padding: '6px 8px',
+                fontSize: '11px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}
+              title="Download snapshot JSON file"
+            >
+              <Download size={13} />
+            </button>
+
+            <button
+              onClick={() => onSelectSnapshot && onSelectSnapshot(snap)}
+              style={{
+                backgroundColor: '#166534',
+                color: '#ffffff',
+                border: '1px solid #14532d',
+                borderRadius: '4px',
+                padding: '6px 12px',
+                fontSize: '12px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                whiteSpace: 'nowrap'
+              }}
+              title="Restore this document version"
+            >
+              <span>Restore</span>
+              <ArrowRight size={13} />
+            </button>
+          </div>
         </div>
       ))}
     </div>
