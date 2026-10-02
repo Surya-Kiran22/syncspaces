@@ -1,19 +1,16 @@
 import express from 'express';
+import { registerUser, loginUser } from '../controllers/authController.js';
 
 const router = express.Router();
 
 // @desc    Register a new user
 // @route   POST /api/auth/register
 // @access  Public
-router.post('/register', (req, res) => {
-  res.status(200).json({ message: 'Register route scaffolded' });
-});
+router.post('/register', registerUser);
 
 // @desc    Authenticate user & get token
 // @route   POST /api/auth/login
 // @access  Public
-router.post('/login', (req, res) => {
-  res.status(200).json({ message: 'Login route scaffolded' });
-});
+router.post('/login', loginUser);
 
 export default router;
